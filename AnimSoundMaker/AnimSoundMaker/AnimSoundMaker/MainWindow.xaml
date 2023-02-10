@@ -1,0 +1,111 @@
+﻿<Window x:Class="AnimSoundMaker.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AnimSoundMaker"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        mc:Ignorable="d"
+        Title="RANWr AnimSoundMaker" Height="600" Width="1000">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="181*"/>
+            <RowDefinition Height="111*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Margin="5,0,0,0" Grid.RowSpan="2">
+            <Menu>
+                <MenuItem Header=" _File "/>
+                <MenuItem Header=" _Edit "/>
+                <MenuItem Header=" _Project "/>
+                <MenuItem Header=" _Tools "/>
+                <MenuItem Header=" _Help "/>
+            </Menu>
+            <Menu>
+                <MenuItem Width="25" Height="25">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/FolderOpened.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Width="25" Height="25">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/Save.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator Style="{DynamicResource VerticalSeparator}"/>
+                <MenuItem Width="25" Height="25">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/CutLight.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Width="25" Height="25">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/CopyLight.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Width="25" Height="25">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/PasteLight.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Width="25" Height="25">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/CloseLight.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Width="25" Height="25">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/ExportData.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator Style="{DynamicResource VerticalSeparator}"/>
+                <MenuItem Width="25" Height="25">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/HelpApplicationLight.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </Menu>
+        </StackPanel>
+        <Grid Margin="0,45,0,0" Grid.RowSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" MinWidth="160"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="6*" MinWidth="400"/>
+            </Grid.ColumnDefinitions>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="4*"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="2*"/>
+                </Grid.RowDefinitions>
+                <GroupBox Grid.Row="0" VerticalAlignment="Stretch" Header="Project Tree">
+                    <TreeView x:Uid="ProjectTree">
+                        <TreeViewItem Header="null.rasp">
+                            <TreeViewItem Header="null.rasd"/>
+                        </TreeViewItem>
+                    </TreeView>
+                </GroupBox>
+                <GroupBox Grid.Row="2" VerticalAlignment="Stretch" Header="Properties">
+                    <xctk:PropertyGrid Name="PropertyBox" ShowSearchBox="False" ShowAdvancedOptions="False"
+                                       ShowPreview="False" ShowSummary="False"
+                                       ShowSortOptions="False" IsReadOnly="True">
+                        <xctk:PropertyGrid.PropertyDefinitions>
+                            <xctk:PropertyDefinition/>
+                        </xctk:PropertyGrid.PropertyDefinitions>
+                        
+                    </xctk:PropertyGrid>
+                </GroupBox>
+                <GridSplitter Grid.Row="1" BorderThickness="1" BorderBrush="#e1e1e1"
+                              HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+            </Grid>
+            <TabControl Grid.Column="2" x:Uid="TabControl">
+                <TabItem Header="null.rasd">
+                    <Frame Name="TestPage">
+                        
+                    </Frame>
+                </TabItem>
+            </TabControl>
+            <GridSplitter Grid.Column="1" BorderThickness="1" BorderBrush="#e1e1e1"
+                          VerticalAlignment="Stretch" HorizontalAlignment="Center"/>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Icons\Close.png" />
+    <None Remove="Icons\CloseLight.png" />
+    <None Remove="Icons\Copy.png" />
+    <None Remove="Icons\CopyLight.png" />
+    <None Remove="Icons\Cut.png" />
+    <None Remove="Icons\CutLight.png" />
+    <None Remove="Icons\ExportData.png" />
+    <None Remove="Icons\FolderOpened.png" />
+    <None Remove="Icons\HelpApplication.png" />
+    <None Remove="Icons\HelpApplicationLight.png" />
+    <None Remove="Icons\NewDocument.png" />
+    <None Remove="Icons\NewDocumentLight.png" />
+    <None Remove="Icons\Paste.png" />
+    <None Remove="Icons\PasteLight.png" />
+    <None Remove="Icons\Save.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.5.0" />
+    <PackageReference Include="PresentationFramework.Aero2" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Icons\Close.png" />
+    <Resource Include="Icons\CloseLight.png" />
+    <Resource Include="Icons\Copy.png" />
+    <Resource Include="Icons\CopyLight.png" />
+    <Resource Include="Icons\Cut.png" />
+    <Resource Include="Icons\CutLight.png" />
+    <Resource Include="Icons\ExportData.png" />
+    <Resource Include="Icons\FolderOpened.png" />
+    <Resource Include="Icons\HelpApplication.png" />
+    <Resource Include="Icons\HelpApplicationLight.png" />
+    <Resource Include="Icons\NewDocument.png" />
+    <Resource Include="Icons\NewDocumentLight.png" />
+    <Resource Include="Icons\Paste.png" />
+    <Resource Include="Icons\PasteLight.png" />
+    <Resource Include="Icons\Save.png" />
+  </ItemGroup>
+
+</Project>

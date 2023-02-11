@@ -14,14 +14,22 @@
         </Grid.RowDefinitions>
         <StackPanel Margin="5,0,0,0" Grid.RowSpan="2">
             <Menu>
-                <MenuItem Header=" _File "/>
+                <MenuItem Header=" _File ">
+                    <MenuItem Header="_New" Template="{DynamicResource SingleDropDownMenuItem}"/>
+                    <MenuItem Header="_Open" Template="{DynamicResource SingleDropDownMenuItem}"
+                              Click="OpenFile_Click"/>
+                    <MenuItem Header="_Save" Template="{DynamicResource SingleDropDownMenuItem}"/>
+                    <Separator Style="{DynamicResource MenuItemSeparator}"/>
+                    <MenuItem Header="_Close" Template="{DynamicResource SingleDropDownMenuItem}"/>
+                </MenuItem>
+                
                 <MenuItem Header=" _Edit "/>
                 <MenuItem Header=" _Project "/>
                 <MenuItem Header=" _Tools "/>
                 <MenuItem Header=" _Help "/>
             </Menu>
             <Menu>
-                <MenuItem Width="25" Height="25">
+                <MenuItem Width="25" Height="25" Click="OpenFile_Click">
                     <MenuItem.Icon>
                         <Image Source="/Icons/FolderOpened.png" />
                     </MenuItem.Icon>
@@ -78,31 +86,21 @@
                     <RowDefinition Height="2*"/>
                 </Grid.RowDefinitions>
                 <GroupBox Grid.Row="0" VerticalAlignment="Stretch" Header="Project Tree">
-                    <TreeView x:Uid="ProjectTree">
-                        <TreeViewItem Header="null.rasp">
-                            <TreeViewItem Header="null.rasd"/>
-                        </TreeViewItem>
+                    <TreeView x:Name="ProjectTree">
                     </TreeView>
                 </GroupBox>
                 <GroupBox Grid.Row="2" VerticalAlignment="Stretch" Header="Properties">
                     <xctk:PropertyGrid Name="PropertyBox" ShowSearchBox="False" ShowAdvancedOptions="False"
                                        ShowPreview="False" ShowSummary="False"
-                                       ShowSortOptions="False" IsReadOnly="True">
-                        <xctk:PropertyGrid.PropertyDefinitions>
-                            <xctk:PropertyDefinition/>
-                        </xctk:PropertyGrid.PropertyDefinitions>
-                        
+                                       ShowSortOptions="False" IsReadOnly="True" DataContext="this">
+                       
                     </xctk:PropertyGrid>
                 </GroupBox>
                 <GridSplitter Grid.Row="1" BorderThickness="1" BorderBrush="#e1e1e1"
                               HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
             </Grid>
-            <TabControl Grid.Column="2" x:Uid="TabControl">
-                <TabItem Header="null.rasd">
-                    <Frame Name="TestPage">
-                        
-                    </Frame>
-                </TabItem>
+            <TabControl Grid.Column="2" x:Name="TabControl">
+                
             </TabControl>
             <GridSplitter Grid.Column="1" BorderThickness="1" BorderBrush="#e1e1e1"
                           VerticalAlignment="Stretch" HorizontalAlignment="Center"/>

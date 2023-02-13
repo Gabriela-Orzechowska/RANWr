@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
@@ -23,8 +24,8 @@ namespace AnimSoundMaker
 {
     public partial class Editor_RASD : Page
     {
-
-        public List<Event> events { get; set; }
+        public ObservableCollection<Event> Events;
+        public string Path = "";
         public EventTypes type { get; set; }
         public uint frameSize { get; set; }
         public RASD loadedFile;
@@ -37,34 +38,45 @@ namespace AnimSoundMaker
 
         public void LoadData(RASD rasd)
         {
-            events = rasd.AnimSound.Events;
-            DataGrid.ItemsSource = events;
+            Path = rasd.FilePath;
+            Events = new();
+            foreach(var e in rasd.AnimSound.Events) 
+            { 
+                Events.Add(e);
+            }
+            loadedFile = rasd;
+            DataGrid.ItemsSource = Events;
             frameSize = rasd.AnimSound.FrameSize;
             FrameCount.Text = frameSize.ToString();
         }
 
         public RASD GetData()
         {
-            loadedFile.AnimSound.Events = events;
+            List<Event> newEvent = new();
+            Events = (ObservableCollection<Event>)DataGrid.ItemsSource;
+            foreach (Event e in Events)
+            {
+                Debug.WriteLine(e.Name);
+                newEvent.Add(e);
+            }
+            frameSize = uint.Parse(FrameCount.Text);
+            loadedFile.AnimSound.Events = newEvent;
             loadedFile.AnimSound.FrameSize = frameSize;
             return loadedFile;
         }
 
         private void AdjustColumns()
         {
-            DataGrid.Columns.First().Header = "";
-            DataGrid.Columns.First().Width = new DataGridLength(0.5, DataGridLengthUnitType.Star);
             DataGrid.Columns.Last().Width = new DataGridLength(2, DataGridLengthUnitType.Star);
-            DataGrid.Columns[5].Width = new DataGridLength(1.5, DataGridLengthUnitType.Star);
-            DataGrid.Columns[3].Width = new DataGridLength(1.5, DataGridLengthUnitType.Star);
-            DataGrid.Columns[3].Header = "Playback Interval";
+            DataGrid.Columns[4].Width = new DataGridLength(1.5, DataGridLengthUnitType.Star);
+            DataGrid.Columns[2].Width = new DataGridLength(1.5, DataGridLengthUnitType.Star);
+            DataGrid.Columns[2].Header = "Playback Interval";
 
             DataGrid.Columns[0].CellStyle = FindResource("MyCellStyle") as Style;
             DataGrid.Columns[1].CellStyle = FindResource("MyCellStyle") as Style;
-            DataGrid.Columns[2].CellStyle = FindResource("MyEndFrameStyle") as Style;
+            DataGrid.Columns[5].CellStyle = FindResource("MyCellStyle") as Style;
             DataGrid.Columns[6].CellStyle = FindResource("MyCellStyle") as Style;
             DataGrid.Columns[7].CellStyle = FindResource("MyCellStyle") as Style;
-            DataGrid.Columns[8].CellStyle = FindResource("MyCellStyle") as Style;
         }
 
         public enum EventTypes
@@ -96,6 +108,40 @@ namespace AnimSoundMaker
         private void FrameCount_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if(!IsTextAllowed(e.Text)) e.Handled= true;
+        }
+
+        private void AddItem_Click(object sender, RoutedEventArgs e)
+        {
+            Events.Add(new Event());
+        }
+
+        private void DataGrid_SourceUpdated(object sender, DataTransferEventArgs e)
+        {
+            DataGrid.Items.Refresh();
+        }
+
+        private void Paste_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.Handled = true;
+            e.CanExecute = true;
+        }
+
+        private void Paste_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            string data = Clipboard.GetText();
+            if (data == null) return;
+            string[] splitData = data.Split("\t");
+            Event @event = new();
+            @event.Start = uint.Parse(splitData[0]);
+            @event.End = int.Parse(splitData[1]);
+            @event.PlaybackInterval = splitData[2] == "True";
+            @event.Type = splitData[3] == "Trigger" ? lib_RASD.EventTypes.Trigger : lib_RASD.EventTypes.Range;
+            @event.Name = splitData[4];
+            @event.Pitch= int.Parse(splitData[5]);
+            @event.Volume= int.Parse(splitData[6]);
+            @event.UserParameter = uint.Parse(splitData[7]);
+            @event.Comment= splitData[8];
+            Events.Add(@event);
         }
     }
 }

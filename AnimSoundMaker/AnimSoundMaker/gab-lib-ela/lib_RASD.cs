@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -12,10 +13,11 @@ using static lib_NW4R;
 
 public class lib_RASD
 {
-    public struct RASD
+    public class RASD : ClassBase
     {
         public Xml_Header Header;
         public AnimSound AnimSound;
+        public string FilePath;
 
         public RASD()
         {
@@ -36,9 +38,25 @@ public class lib_RASD
         }
     }
 
-    public struct Event
+    public class ClassBase : INotifyPropertyChanged
     {
-        public uint Index { get; set; }
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
+        {
+            var handler = PropertyChanged;
+            handler?.Invoke(this, args);
+        }
+    }
+
+    public class Event : ClassBase
+    {
+        public uint Index;
         public uint Start { get; set; }
         public int End { get; set; }
         [DisplayName("Playback Interval")]
@@ -51,6 +69,23 @@ public class lib_RASD
         public int Volume { get; set; }
         public uint UserParameter { get; set; }
         public string Comment { get; set; }
+
+        public Event()
+        {
+            Index = 0;
+            Start = 0;
+            End = -1;
+            PlaybackInterval = false;
+            Type = EventTypes.Trigger;
+            IntType = 1;
+            StringType = "Trigger";
+            Name = "";
+            Pitch = 1;
+            Volume = 127;
+            UserParameter= 0;
+            Comment = "";
+        }
+
     }
 
     public enum EventTypes
@@ -64,11 +99,12 @@ public class lib_RASD
     {
         if(string.IsNullOrEmpty(filePath)) return null;
         RASD _rasd = new RASD();
+        _rasd.FilePath = filePath;
         XmlDocument doc = new XmlDocument();
         doc.Load(filePath);
         XmlElement root = doc.DocumentElement;
 
-        if (root.Name != "banw_snd")
+        if (root.Name != "ranwr_snd")
         {
             if (root.Name != "nintendoware_snd")
                 return null;
@@ -139,7 +175,7 @@ public class lib_RASD
             _new.Index = i;
             foreach (XmlNode _node in _event)
             {
-                
+                _new.Comment = "";
                 switch(_node.Name)
                 {
                     case "frame":
@@ -193,7 +229,7 @@ public class lib_RASD
         BigEndianReader r = new(stream);
         if (r.ReadString(4, 0x0) != "RASD") return null;
         RASD _rasd = new();
-
+        _rasd.FilePath = filePath;
         Xml_Header header = new()
         {
             CreatorName = "None",
@@ -227,10 +263,11 @@ public class lib_RASD
             long soundDataOffset = r.ReadUInt32(0x10) + dataHeaderEnding;
             Debug.WriteLine(soundDataOffset);
             stream.Position = soundDataOffset;
-            _event.Volume = r.ReadByte(0x10);
+            _event.Volume = Math.Clamp(r.ReadByte(0x10),(byte)0,(byte)127);
             _event.Pitch = r.ReadFloat(0x14);
             _event.Name = r.ReadStringNT(0x20);
             _event.UserParameter = r.ReadUInt32(0x1C);
+            _event.Comment = "";
             animSound.Events.Add(_event);
             stream.Position = currentOffset + 0x14;
         }
@@ -264,13 +301,27 @@ public class lib_RASD
                 new XElement("id", new XAttribute("type", "name"), @event.Name));
 
             XElement xem = new XElement("event", frame, sound, new XElement("volume", (((float)@event.Volume) / 127f).ToString()), new XElement("pitch", @event.Pitch.ToString()),
-                new XElement("comment", @event.Comment), new XElement("userParameter", @event.UserParameter));
+                new XElement("comment", @event.Comment), new XElement("user_param", @event.UserParameter));
 
             events[i] = xem;
-            Debug.WriteLine(xem);
+            
+        }
+
+        XElement head = new XElement("head",
+            new XElement("create", new XAttribute("user", Environment.UserName), new XAttribute("host", Environment.MachineName), new XAttribute("date", DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")), new XAttribute("source", "")),
+            new XElement("title", data.Header.Title), new XElement("generator", new XAttribute("name", "RANWR AnimSoundMaker"), new XAttribute("version","1.0")));
+
+        XElement body = new XElement("body",
+            new XElement("anim_sound", new XElement("frame_size", data.AnimSound.FrameSize), new XElement("event_array", new XAttribute("size", data.AnimSound.Events.Count), events)));
+
+        XElement main = new XElement("ranwr_snd", new XAttribute("version", "1.0.0"), new XAttribute("platform", "Revolution"), head, body);
+        
+        XDocument xdoc = new XDocument(new XDeclaration("1.0",null,null),main);
+        using (StreamWriter file = new(filepath, false))
+        {
+            xdoc.Save(file);
         }
 
     }   
     
-
 }

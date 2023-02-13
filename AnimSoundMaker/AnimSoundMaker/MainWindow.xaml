@@ -18,7 +18,10 @@
                     <MenuItem Header="_New" Template="{DynamicResource SingleDropDownMenuItem}"/>
                     <MenuItem Header="_Open" Template="{DynamicResource SingleDropDownMenuItem}"
                               Click="OpenFile_Click"/>
-                    <MenuItem Header="_Save" Template="{DynamicResource SingleDropDownMenuItem}"/>
+                    <MenuItem Header="_Save" Template="{DynamicResource SingleDropDownMenuItem}"
+                              Click="SaveFile_Click"/>
+                    <MenuItem Header="_Save as" Template="{DynamicResource SingleDropDownMenuItem}"
+                              Click="SaveAsFile_Click"/>
                     <Separator Style="{DynamicResource MenuItemSeparator}"/>
                     <MenuItem Header="_Close" Template="{DynamicResource SingleDropDownMenuItem}"/>
                 </MenuItem>
@@ -99,8 +102,22 @@
                 <GridSplitter Grid.Row="1" BorderThickness="1" BorderBrush="#e1e1e1"
                               HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
             </Grid>
-            <TabControl Grid.Column="2" x:Name="TabControl">
-                
+            <TabControl Grid.Column="2" x:Name="TabControl" ContextMenuOpening="TabMenu_ContextMenuOpening">
+                <TabControl.ItemTemplate>
+                    <DataTemplate>
+                        
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+                <TabControl.ContextMenu>
+                    <ContextMenu >
+                        <MenuItem Header="Save" Template="{DynamicResource SingleDropDownMenuItem}"
+                                  Click="SaveFile_Click"/>
+                        <MenuItem Header="Save as" Template="{DynamicResource SingleDropDownMenuItem}"
+                                  Click="SaveAsFile_Click"/>
+                        <MenuItem Header="Close" Template="{DynamicResource SingleDropDownMenuItem}"
+                                  Click="CloseFile_Click"/>
+                    </ContextMenu>
+                </TabControl.ContextMenu>
             </TabControl>
             <GridSplitter Grid.Column="1" BorderThickness="1" BorderBrush="#e1e1e1"
                           VerticalAlignment="Stretch" HorizontalAlignment="Center"/>

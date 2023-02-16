@@ -104,47 +104,9 @@ public class lib_RASD
         doc.Load(filePath);
         XmlElement root = doc.DocumentElement;
 
-        if (root.Name != "ranwr_snd")
-        {
-            if (root.Name != "nintendoware_snd")
-                return null;
-        }
+        Xml_Header? xml_Header = TryReadHeader(doc);
+        if (doc != null) _rasd.Header = xml_Header;
 
-        XmlNode head = root.FirstChild;
-        foreach (XmlNode n in head)
-        {
-            switch (n.Name)
-            {
-                case "create":
-                    foreach (XmlAttribute attr in n.Attributes)
-                    {
-                        switch (attr.Name)
-                        {
-                            case "user":
-                                _rasd.Header.CreatorName = attr.Value; break;
-                            case "host":
-                                _rasd.Header.HostName = attr.Value; break;
-                            case "date":
-                                _rasd.Header.DataSaved = attr.Value; break;
-                        }
-                    }
-                    break;
-                case "generator":
-                    foreach (XmlAttribute attr in n.Attributes)
-                    {
-                        switch (attr.Name)
-                        {
-                            case "name":
-                                _rasd.Header.Generator = attr.Value; break;
-                            case "version":
-                                _rasd.Header.GeneratorVersion = attr.Value; break;
-                        }
-                    }
-                    break;
-                case "title":
-                    _rasd.Header.Title = n.InnerText; break;
-            }
-        }
         XmlNode body = root.LastChild;
         XmlNode anim_sound = null;
         XmlNode event_array = null;

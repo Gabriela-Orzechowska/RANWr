@@ -2,10 +2,13 @@
  RANWr (RANWr Ain't NintendoWare) is set of editors for various Wii file formats.
  
 ## Current Tools
-| Tool   | Status   |  Formats | Can Open | Can Save |
-|--------|----------|----------|----------|----------|
-| AnimSoundMaker| In Works | .brasd .rasd .rasp| Yes      | No     |
-| SoundMaker | Planned | - | - | - |
+### AnimSoundMaker: In Progess
+#### Supported File Formats
+| Format | Can Open | Can Save |
+|--------|----------|----------|
+| .rasd  | Yes      | Yes      |
+| .brasd | Yes      | Yes      |
+| .rasp  | Yes      | No       |
 
 ## Credits
 * Extended WPF Toolkit - https://github.com/xceedsoftware/wpftoolkit

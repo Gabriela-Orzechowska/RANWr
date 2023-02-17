@@ -40,6 +40,7 @@ namespace AnimSoundMaker
         public BasicData Data { get; set; }
 
         public List<RASD> loadedFiles = new List<RASD>();
+        public RASP loadedProject;
         public Dictionary<TabItem, Editor_RASD> editorConnections = new();
         public Dictionary<TabItem, TreeViewItem> treeViewConnection = new();
         public TreeViewItem defaultAnim;
@@ -48,17 +49,15 @@ namespace AnimSoundMaker
         {
             InitializeComponent();
 
+            
+
             string[] args = Environment.GetCommandLineArgs();
-            foreach(string arg in args)
+            foreach(string arg in args.Skip(1))
             {
                 if (!File.Exists(arg)) continue;
-                if (Path.GetExtension(arg) == ".dll") continue;
                 TryLoadFile(arg);
                 
-            }
-                
-            
-          
+            }         
         }
 
         private void OpenFile_Click(object sender, RoutedEventArgs e)
@@ -115,12 +114,14 @@ namespace AnimSoundMaker
             }
             if (rasd == null) return null;
 
+            
+
             string name = Path.GetFileName(path);
             string shortName = Path.GetFileNameWithoutExtension(path);
-            loadedFiles.Add((RASD)rasd);
-            TreeViewItem item = PopulateTree(shortName);
-            CreateTab(shortName, (RASD)rasd, item);
-            LoadBasicData((RASD)rasd);
+            loadedProject = ProjectFromRASD(shortName, rasd);
+            PopulateTree(shortName, loadedProject);
+            CreateTab(shortName, rasd, null);
+            LoadBasicData(rasd);
             return rasd;
         }
 
@@ -155,41 +156,41 @@ namespace AnimSoundMaker
             
         }
 
-        private TreeViewItem PopulateTree(string name, RASP? rasp = null)
+        private void PopulateTree(string name, RASP rasp)
         {
-            TreeViewItem output = new();
-            if (rasp == null)
+            AnimSoundProject project = rasp.Project;
+            TreeViewItem itRoot = new();
+            itRoot.Header = name;
+
+            foreach(var model in project.Models)
             {
-                if(!ProjectTree.Items.Cast<TreeViewItem>().Any(item => item.Header.ToString() == @"<null>.rasp"))
+                TreeViewItem itModel = new();
+                itModel.Header = model.Name;
+                itModel.IsExpanded = true;
+
+                foreach(var anim in model.Anims)
                 {
-                    TreeViewItem tempProjectName = new();
-                    tempProjectName.Header = @"<null>.rasp";
-                    
-                    ProjectTree.Items.Add(tempProjectName);
+                    TreeViewItem itAnim = new();
+                    itAnim.Header = anim.Name;
+                    itAnim.IsExpanded = true;
 
-                    TreeViewItem tempModelName = new();
-                    tempModelName.Header = @"<null>.rmdl";
-                    tempModelName.Foreground = Brushes.Red;
-                    tempProjectName.Items.Add(tempModelName);
+                    foreach(var sound in anim.Sounds)
+                    {
+                        TreeViewItem itSound = new();
+                        itSound.Header = sound.Name;
 
-                    TreeViewItem tempAnimName = new();
-                    tempAnimName.Header = @"<null>.rcha";
-                    tempModelName.Items.Add(tempAnimName);
+                        itAnim.Items.Add(itSound);
+                    }
 
-                    tempProjectName.IsExpanded = true;
-                    tempModelName.IsExpanded = true;
-                    tempAnimName.IsExpanded = true;
+                    itModel.Items.Add(itAnim);
 
-                    defaultAnim = tempAnimName;
                 }
-
-                TreeViewItem rasdNode = new();
-                rasdNode.Header = name;
-                rasdNode.IsSelected= true;
-                output = rasdNode;
-                defaultAnim.Items.Add(rasdNode);
+                
+                itRoot.Items.Add(itModel);
             }
-            return output;
+
+            ProjectTree.Items.Add(itRoot);
+            
         }
 
         private void CreateTab(string name, RASD rasd, TreeViewItem treeItem, string projectName = @"<null>.rasp")

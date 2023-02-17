@@ -170,9 +170,10 @@ public class lib_RASD
                     case "comment":
                         _new.Comment = _node.InnerText; break;
                     case "volume":
-                        _new.Volume = (int) Math.Round(127 * float.Parse(_node.InnerText)); break;
+                        float volume = float.Parse(_node.InnerText.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture);
+                        _new.Volume = (int) Math.Round(127 * volume); break;
                     case "pitch":
-                        _new.Pitch = float.Parse(_node.InnerText); break;
+                        _new.Pitch = float.Parse(_node.InnerText.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture); break;
                     case "user_param":
                         _new.UserParameter = uint.Parse(_node.InnerText); break;
 

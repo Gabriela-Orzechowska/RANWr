@@ -73,7 +73,7 @@ public class lib_RASP
     }
 
 
-    public RASP? TryReadRASP(string filePath)
+    public static RASP? TryReadRASP(string filePath)
     {
         if (string.IsNullOrEmpty(filePath)) return null;
         RASP _rasp = new();
@@ -152,7 +152,7 @@ public class lib_RASP
         return _rasp;
     }
 
-    public RASP ProjectFromRASD(RASD rasd)
+    public static RASP ProjectFromRASD(RASD rasd)
     {
         RASPSoundEntry sound = new();
         sound.Data = rasd;

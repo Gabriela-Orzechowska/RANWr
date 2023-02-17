@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using static lib_NW4R;
+using static lib_RASD;
+
 
 public class lib_RASP
 {
@@ -33,16 +35,41 @@ public class lib_RASP
     public struct RASPModelEntry
     {
         public string FilePath;
+        public string Name;
         public List<RASPAnimEntry> Anims;
+
+        public RASPModelEntry()
+        {
+            FilePath = string.Empty;
+            Name = string.Empty;
+            Anims = new();
+        }
     }
     public struct RASPAnimEntry
     {
         public string FilePath;
+        public string Name;
         public List<RASPSoundEntry> Sounds;
+
+        public RASPAnimEntry()
+        {
+            FilePath = string.Empty;
+            Name = string.Empty;
+            Sounds = new();
+        }
     }
     public struct RASPSoundEntry
     {
         public string FilePath;
+        public string Name;
+        public RASD Data;
+
+        public RASPSoundEntry()
+        {
+            FilePath = string.Empty;
+            Name= string.Empty;
+            Data = new();
+        }
     }
 
 
@@ -104,7 +131,10 @@ public class lib_RASP
                                         switch (s.Name)
                                         {
                                             case "file":
-                                                sound.FilePath = s.Attributes["path"].Value; break;
+                                                sound.FilePath = s.Attributes["path"].Value;
+                                                sound.Data = TryOpenRASD(sound.FilePath);
+                                                break;
+
                                         }
                                         anim.Sounds.Add(sound);
                                     }
@@ -120,6 +150,25 @@ public class lib_RASP
 
             
         return _rasp;
+    }
+
+    public RASP ProjectFromRASD(RASD rasd)
+    {
+        RASPSoundEntry sound = new();
+        sound.Data = rasd;
+        sound.Name = rasd.Header.Title;
+        sound.FilePath = rasd.Header.Title;
+
+        RASPAnimEntry anim = new();
+        anim.Sounds.Add(sound);
+
+        RASPModelEntry model = new();
+        model.Anims.Add(anim);
+
+        RASP rasp = new();
+        rasp.Project.Models.Add(model);
+
+        return rasp;
     }
 
 }

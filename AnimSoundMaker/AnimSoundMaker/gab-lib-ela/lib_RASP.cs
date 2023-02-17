@@ -23,12 +23,14 @@ public class lib_RASP
     public struct AnimSoundProject
     {
         public List<string> BRSARFilepath;
+        public string Name;
         public List<RASPModelEntry> Models;
 
         public AnimSoundProject()
         {
             BRSARFilepath = new();
             Models = new();
+            Name = string.Empty;
         }
     }
 
@@ -152,20 +154,23 @@ public class lib_RASP
         return _rasp;
     }
 
-    public static RASP ProjectFromRASD(RASD rasd)
+    public static RASP ProjectFromRASD(string name, RASD rasd)
     {
         RASPSoundEntry sound = new();
         sound.Data = rasd;
-        sound.Name = rasd.Header.Title;
+        sound.Name = name;
         sound.FilePath = rasd.Header.Title;
 
         RASPAnimEntry anim = new();
+        anim.Name = "<null-anim>";
         anim.Sounds.Add(sound);
 
         RASPModelEntry model = new();
+        model.Name = "<null-model>";
         model.Anims.Add(anim);
 
         RASP rasp = new();
+        rasp.Project.Name = "<null-project>"; 
         rasp.Project.Models.Add(model);
 
         return rasp;

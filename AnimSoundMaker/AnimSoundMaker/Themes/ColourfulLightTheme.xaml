@@ -1830,10 +1830,7 @@
                             <Setter Property="BorderBrush" TargetName="templateRoot" Value="{StaticResource ControlPrimaryMouseOverBorderBrush}"/>
                             <Setter Property="Foreground" Value="{DynamicResource ControlMOSelectForeground}"/>
                         </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="TextElement.Foreground" TargetName="templateRoot" Value="{StaticResource ControlDisabledGlythColour}"/>
-                            <Setter Property="Background" Value="{StaticResource ControlDisabledBackground}"/>
-                        </Trigger>
+
                         <Trigger Property="CanContentScroll" SourceName="SubMenuScrollViewer" Value="False">
                             <Setter Property="Canvas.Top" TargetName="OpaqueRect" Value="{Binding VerticalOffset, ElementName=SubMenuScrollViewer}"/>
                             <Setter Property="Canvas.Left" TargetName="OpaqueRect" Value="{Binding HorizontalOffset, ElementName=SubMenuScrollViewer}"/>

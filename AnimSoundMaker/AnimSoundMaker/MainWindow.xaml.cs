@@ -69,6 +69,15 @@ namespace AnimSoundMaker
             }         
         }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (datas.Count > 0)
+            {
+                var result = MessageBox.Show("Are you sure to close?", "Close App Confirmation", MessageBoxButton.YesNo);
+                if (result == MessageBoxResult.No) e.Cancel = true;
+            }
+        }
+
         public void MainWindow_Drop(object sender, DragEventArgs e)
         {
             if (e.Data is System.Windows.DataObject && ((System.Windows.DataObject)e.Data).ContainsFileDropList())

@@ -238,6 +238,7 @@ public class lib_RASD
 
         _rasd.Header = header;
         _rasd.AnimSound = animSound;
+        stream.Close();
         return _rasd;
     
     }

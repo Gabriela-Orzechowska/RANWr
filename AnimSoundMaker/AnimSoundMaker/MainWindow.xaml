@@ -17,10 +17,10 @@
                 <MenuItem Header=" _File ">
                     <MenuItem Header="_New" Template="{DynamicResource SingleDropDownMenuItem}"/>
                     <MenuItem Header="_Open" Template="{DynamicResource SingleDropDownMenuItem}"
-                              Click="OpenFile_Click"/>
+                              Click="ImportFile_Click"/>
                     <MenuItem Header="_Save" Template="{DynamicResource SingleDropDownMenuItem}"
                               Click="SaveFile_Click"/>
-                    <MenuItem Header="_Save as" Template="{DynamicResource SingleDropDownMenuItem}"
+                    <MenuItem Header="_Save" Template="{DynamicResource SingleDropDownMenuItem}"
                               Click="SaveAsFile_Click"/>
                     <Separator Style="{DynamicResource MenuItemSeparator}"/>
                     <MenuItem Header="_Close" Template="{DynamicResource SingleDropDownMenuItem}"/>
@@ -32,7 +32,7 @@
                 <MenuItem Header=" _Help "/>
             </Menu>
             <Menu>
-                <MenuItem Width="25" Height="25" Click="OpenFile_Click">
+                <MenuItem Width="25" Height="25" Click="ImportFile_Click">
                     <MenuItem.Icon>
                         <Image Source="/Icons/FolderOpened.png" />
                     </MenuItem.Icon>
@@ -115,7 +115,7 @@
                         <MenuItem Header="Save as" Template="{DynamicResource SingleDropDownMenuItem}"
                                   Click="SaveAsFile_Click"/>
                         <MenuItem Header="Close" Template="{DynamicResource SingleDropDownMenuItem}"
-                                  Click="CloseFile_Click"/>
+                                  Click="CloseTab_Click"/>
                     </ContextMenu>
                 </TabControl.ContextMenu>
             </TabControl>

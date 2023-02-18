@@ -37,35 +37,30 @@
                         <Image Source="/Icons/FolderOpened.png" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Width="25" Height="25">
+                <MenuItem Width="25" Height="25"
+                          Click="SaveFile_Click">
                     <MenuItem.Icon>
                         <Image Source="/Icons/Save.png" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator Style="{DynamicResource VerticalSeparator}"/>
-                <MenuItem Width="25" Height="25">
-                    <MenuItem.Icon>
-                        <Image Source="/Icons/CutLight.png" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Width="25" Height="25">
+                <MenuItem Width="25" Height="25"
+                          Command="{x:Static ApplicationCommands.Copy}">
                     <MenuItem.Icon>
                         <Image Source="/Icons/CopyLight.png" />
+                        
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Width="25" Height="25">
+                <MenuItem Width="25" Height="25"
+                          Command="{x:Static ApplicationCommands.Paste}">
                     <MenuItem.Icon>
                         <Image Source="/Icons/PasteLight.png" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Width="25" Height="25">
+                <MenuItem Width="25" Height="25"
+                          Click="CloseTab_Click">
                     <MenuItem.Icon>
                         <Image Source="/Icons/CloseLight.png" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Width="25" Height="25">
-                    <MenuItem.Icon>
-                        <Image Source="/Icons/ExportData.png" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator Style="{DynamicResource VerticalSeparator}"/>
@@ -89,7 +84,22 @@
                     <RowDefinition Height="2*"/>
                 </Grid.RowDefinitions>
                 <GroupBox Grid.Row="0" VerticalAlignment="Stretch" Header="Project Tree">
-                    <TreeView x:Name="ProjectTree">
+                    <TreeView x:Name="ProjectTree"
+                              ContextMenuOpening="ProjectTree_ContextMenuOpening">
+                        <TreeView.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="_Save" 
+                                          Template="{DynamicResource SingleDropDownMenuItem}"
+                                          Click="SaveTreeItem_Click"/>
+                                <MenuItem Header="_Save as"
+                                          Template="{DynamicResource SingleDropDownMenuItem}"
+                                          Click="SaveAsTreeItem_Click"/>
+                                <MenuItem Header="_Close File"
+                                          Template="{DynamicResource SingleDropDownMenuItem}"
+                                          Click="CloseFile_Click"/>
+
+                            </ContextMenu>
+                        </TreeView.ContextMenu>
                     </TreeView>
                 </GroupBox>
                 <GroupBox Grid.Row="2" VerticalAlignment="Stretch" Header="Properties">
@@ -102,14 +112,24 @@
                 <GridSplitter Grid.Row="1" BorderThickness="1" BorderBrush="#e1e1e1"
                               HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
             </Grid>
-            <TabControl Grid.Column="2" x:Name="TabControl" ContextMenuOpening="TabMenu_ContextMenuOpening">
+            <TabControl Grid.Column="2" x:Name="TabControl" ContextMenuOpening="TabMenu_ContextMenuOpening"
+                        >
+                <TabControl.Resources>
+                    <Style TargetType="TabItem">
+                        <Setter Property="AllowDrop" Value="True"/>
+                        <EventSetter Event="PreviewMouseMove" Handler="TabItem_PreviewMouseMove"/>
+                        <EventSetter Event="Drop" Handler="TabItem_Drop"/>
+                    </Style>
+                </TabControl.Resources>
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         
                     </DataTemplate>
                 </TabControl.ItemTemplate>
                 <TabControl.ContextMenu>
-                    <ContextMenu >
+                    <ContextMenu>
+                        <MenuItem Header="Import" Template="{DynamicResource SingleDropDownMenuItem}"
+                                  Click="ImportFile_Click"/>
                         <MenuItem Header="Save" Template="{DynamicResource SingleDropDownMenuItem}"
                                   Click="SaveFile_Click"/>
                         <MenuItem Header="Save as" Template="{DynamicResource SingleDropDownMenuItem}"

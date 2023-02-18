@@ -63,9 +63,8 @@ namespace AnimSoundMaker
         public MainWindow()
         {
             InitializeComponent();
-
-            
-
+            this.AllowDrop = true;
+            this.Drop += MainWindow_Drop;
             string[] args = Environment.GetCommandLineArgs();
             foreach(string arg in args.Skip(1))
             {
@@ -73,6 +72,15 @@ namespace AnimSoundMaker
                 TryImportFile(arg);
                 
             }         
+        }
+
+        private void MainWindow_Drop(object sender, DragEventArgs e)
+        {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            foreach(var file in files)
+            {
+                TryImportFile(file);
+            }
         }
 
         private void OpenProject_Click(object sender, RoutedEventArgs e)

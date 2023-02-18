@@ -8,6 +8,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Printing;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -74,12 +75,15 @@ namespace AnimSoundMaker
             }         
         }
 
-        private void MainWindow_Drop(object sender, DragEventArgs e)
+        public void MainWindow_Drop(object sender, DragEventArgs e)
         {
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            foreach(var file in files)
+            if (e.Data is System.Windows.DataObject && ((System.Windows.DataObject)e.Data).ContainsFileDropList())
             {
-                TryImportFile(file);
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                foreach (var file in files)
+                {
+                    TryImportFile(file);
+                }
             }
         }
 
@@ -120,7 +124,7 @@ namespace AnimSoundMaker
             {
                 TabItem currentTab = (TabItem)TabControl.SelectedItem;
                 if (currentTab == null) return;
-                string name = currentTab.Header.ToString().Replace("__", "_");
+                string name = currentTab.Name.ToString().Replace("__", "_");
 
                 TrySaveFile(dialog.FileName, name);
             }
@@ -130,7 +134,7 @@ namespace AnimSoundMaker
         {
             TabItem currentTab = (TabItem)TabControl.SelectedItem;
             if (currentTab == null) return;
-            string name = currentTab.Header.ToString().Replace("__", "_");
+            string name = currentTab.Name.ToString().Replace("__", "_");
             Editor_RASD? editor = null;
             foreach(var dat in datas)
             {
@@ -166,11 +170,6 @@ namespace AnimSoundMaker
         private void CloseTab_Click(object sender, RoutedEventArgs e)
         {
             if (TabControl.Items.Count == 0) return;
-            //MessageBoxResult messageBoxResult = MessageBox.Show("Are you sure to close the file?", "Close Confirmation", MessageBoxButton.YesNo);
-            //if (messageBoxResult == MessageBoxResult.Yes)
-            //{
-            //    CloseTab();
-            //}
             CloseTab();
 
         }
@@ -192,19 +191,26 @@ namespace AnimSoundMaker
 
             string name = Path.GetFileName(path);
             string shortName = Path.GetFileNameWithoutExtension(path);
+            string folderName = Path.GetFileName(Path.GetDirectoryName(path));
+            if(datas.Cast<FileData>().Any(i => i.Name == shortName && i.ModelName == folderName))
+            {
+                MessageBox.Show("File is already opened", "File Open Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return null;
+            }
+
 
             switch (Path.GetExtension(path).Trim())
             {
                 case ".brasd":
                     rasd = TryOpenBRASD(path);
                     if (loadedProject == null) rasp = ProjectFromRASD(shortName, rasd, Path.GetFileName(Path.GetDirectoryName(path)));
-                    else rasp = AddSoundToProject(defaultAnim, shortName, rasd, (RASP)loadedProject);
+                    else rasp = AddSoundToProject(defaultAnim, shortName, rasd, (RASP)loadedProject, Path.GetFileName(Path.GetDirectoryName(path)));
                     rasds.Add(rasd);
                     break;
                 case ".rasd":
                     rasd = TryOpenRASD(path);
                     if (loadedProject == null) rasp = ProjectFromRASD(shortName, rasd, Path.GetFileName(Path.GetDirectoryName(path)));
-                    else rasp = AddSoundToProject(defaultAnim, shortName, rasd, (RASP)loadedProject);
+                    else rasp = AddSoundToProject(defaultAnim, shortName, rasd, (RASP)loadedProject, Path.GetFileName(Path.GetDirectoryName(path)));
                     rasds.Add(rasd);
                     break;                
             }
@@ -243,6 +249,7 @@ namespace AnimSoundMaker
 
         private List<TreeViewItem> PopulateTree(string name, RASP rasp, string path = "")
         {
+            Debug.WriteLine("Populate Tree");
             AnimSoundProject project = rasp.Project;
             List<TreeViewItem> output = new();
             TreeViewItem itRoot = new();
@@ -261,45 +268,50 @@ namespace AnimSoundMaker
                 foreach(var anim in model.Anims)
                 {
                     TreeViewItem itAnim = new();
-                    itAnim.Header = anim.Name;
+                    itAnim.Header = anim.Name + ".rchr";
                     itAnim.Tag = "Animation";
                     itAnim.IsExpanded = true;
 
-                    foreach(var sound in anim.Sounds)
+                    foreach (var sound in anim.Sounds)
                     {
                         TreeViewItem itSound = new();
-                        itSound.Header = sound.Name;
+                        itSound.Header = sound.Name + ".rasd";
                         itSound.Tag = "Sound";
                         itSound.MouseDoubleClick += TreeViewItem_DoubleClick;
+                        itSound.ContextMenuOpening += ProjectTree_ContextMenuOpening;
+                       
 
-                        if (datas.Cast<FileData>().Any(i => i.Name == sound.Name))
+                        if (datas.Cast<FileData>().Any(i => i.Name == sound.Name && i.ModelName == model.Name))
                         {
                             foreach(var dat in datas)
                             {
-                                if (dat.Name == name && dat.ModelName == anim.Name)
+                                if (dat.Name == sound.Name && dat.ModelName == model.Name)
                                 {
+                                    Debug.WriteLine(model.Name);
+                                    Debug.WriteLine(dat.ModelName);
                                     itSound = dat.treeItem;
+                                    ((TreeViewItem)itSound.Parent).Items.Clear();
+                                    Debug.WriteLine(itSound.Parent);
                                 }
                             }    
                         }
                         else
                         {
-                            
                             FileData dat = new();
                             dat.Name = name;
                             dat.treeItem = itSound;
-                            dat.tabItem = CreateTab(name, sound.Data, itSound, out Editor_RASD editor);
+                            dat.tabItem = CreateTab(name, sound.Data, itSound, out Editor_RASD editor, model.Name);
                             dat.data = sound.Data;
                             dat.editor= editor;
                             dat.FilePath = path;
-                            dat.ModelName = anim.Name;
+                            dat.ModelName = model.Name;
                             Guid guid = Guid.NewGuid();
                             dat.UUID = guid.ToString();
                             datas.Add(dat);
                         }
                         defaultAnim = itAnim;
-                        
-                        itAnim.Items.Add(itSound);
+                        if(!itAnim.Items.Contains(itSound))
+                            itAnim.Items.Add(itSound);
                         output.Add(itSound);
                     }
 
@@ -312,14 +324,17 @@ namespace AnimSoundMaker
             return output;
         }
 
-        private TabItem CreateTab(string name, RASD rasd, TreeViewItem treeItem, out Editor_RASD editor)
+        private TabItem CreateTab(string name, RASD rasd, TreeViewItem treeItem, out Editor_RASD editor, string tabName)
         {
             TabItem tabItem = new TabItem();
             Debug.WriteLine(name);
-            tabItem.Header = name.Replace("_","__");
+            tabItem.Header = $@"{tabName} - {name.Replace("_", "__")}";
+            tabItem.Name = name;
             tabItem.IsSelected = true;
 
             editor= new Editor_RASD();
+            editor.AllowDrop = true;
+            
             editor.LoadData(rasd);
             Frame frame = new();
             frame.Content = editor;
@@ -354,9 +369,105 @@ namespace AnimSoundMaker
             TabControl.SelectedItem = hover;
         }
 
+        private void TabItem_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (!(e.Source is TabItem tabItem))
+            {
+                return;
+            }
+
+            if (Mouse.PrimaryDevice.LeftButton == MouseButtonState.Pressed)
+            {
+                DragDrop.DoDragDrop(tabItem, tabItem, DragDropEffects.All);
+            }
+        }
+
+        private void TabItem_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Source is TabItem tabItemTarget &&
+                e.Data.GetData(typeof(TabItem)) is TabItem tabItemSource &&
+                !tabItemTarget.Equals(tabItemSource) &&
+                tabItemTarget.Parent is TabControl tabControl)
+            {
+                int targetIndex = tabControl.Items.IndexOf(tabItemTarget);
+
+                tabControl.Items.Remove(tabItemSource);
+                tabControl.Items.Insert(targetIndex, tabItemSource);
+                tabItemSource.IsSelected = true;
+            }
+        }
+
+        private volatile TreeViewItem currentTabItem;
+
+        private void ProjectTree_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            if (sender is TreeView)
+            {
+                e.Handled = true; return;
+            }
+            TreeViewItem item = sender as TreeViewItem;
+            if (!item.Tag.ToString().Contains("Sound")) e.Handled = true;
+            else
+            {
+                ProjectTree.ContextMenu.IsOpen = true;
+                currentTabItem = item;
+            }
+        }
+
+        private void SaveTreeItem_Click(object sender, RoutedEventArgs e)
+        {
+            var item = currentTabItem;
+            TabItem? tabItem = null;
+            Editor_RASD? editor = null;
+            string name = "";
+            foreach(var dat in datas)
+            {
+                if (dat.treeItem.Name == item.Name)
+                {
+                    tabItem = dat.tabItem;
+                    editor = dat.editor;
+                    name = dat.Name; break;
+                }
+            }
+            if(tabItem != null)
+            {
+                tabItem.IsSelected = true;
+                TrySaveFile(editor.Path, name);
+            }
+        }
+
+        private void SaveAsTreeItem_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new SaveFileDialog();
+            dialog.Filter = "All supported files|*.brasd;*.rasd|Binary Revolution Animation Sound Data|*.brasd|Revolution Animation Sound Data|*.rasd";
+            bool? result = dialog.ShowDialog();
+            if (result == true)
+            {
+                var item = currentTabItem;
+                TabItem? tabItem = null;
+                Editor_RASD? editor = null;
+                string name = "";
+                foreach (var dat in datas)
+                {
+                    if (dat.treeItem.Name == item.Name)
+                    {
+                        tabItem = dat.tabItem;
+                        editor = dat.editor;
+                        name = dat.Name; break;
+                    }
+                }
+                if (tabItem != null)
+                {
+                    tabItem.IsSelected = true;
+                    TrySaveFile(dialog.FileName, name);
+                }
+            }
+        }
+
+        private void CloseFile_Click(object sender, RoutedEventArgs e)
+        {
+            var item = currentTabItem;
+            
+        }
     }
-
-    
-
-
 }

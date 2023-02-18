@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Controls;
 using System.Xml;
+using static AnimSoundMaker.MainWindow;
 using static lib_NW4R;
 using static lib_RASD;
 
@@ -196,16 +197,34 @@ public class lib_RASP
         return rasp;
     }
 
-    public static RASP AddSoundToProject(TreeViewItem itAnim, string name, RASD rasd, RASP rasp)
+    public static RASP AddSoundToProject(TreeViewItem itAnim, string name, RASD rasd, RASP rasp, string? modelName = null)
     {
-        string modelName = (itAnim.Parent as TreeViewItem).Header.ToString();
+        bool hadModelName = modelName != null;
+        if (!hadModelName)
+            modelName = (itAnim.Parent as TreeViewItem).Header.ToString();
 
-        foreach(var model in rasp.Project.Models)
+        if (!hadModelName)
         {
-            Debug.WriteLine(model.Name);
-            Debug.WriteLine(modelName);
-            if (model.Name != modelName) continue;
+            foreach (var model in rasp.Project.Models)
+            {
+                Debug.WriteLine(model.Name);
+                Debug.WriteLine(modelName);
+                if (model.Name != modelName) continue;
 
+                RASPSoundEntry sound = new();
+                sound.Name = name;
+                sound.Data = rasd;
+
+                RASPAnimEntry anim = new();
+                anim.Name = name;
+                anim.Sounds.Add(sound);
+
+                model.Anims.Add(anim);
+            }
+        }
+        else
+        {
+            RASPModelEntry model = new();
             RASPSoundEntry sound = new();
             sound.Name = name;
             sound.Data = rasd;
@@ -214,7 +233,22 @@ public class lib_RASP
             anim.Name = name;
             anim.Sounds.Add(sound);
 
-            model.Anims.Add(anim);
+            if (rasp.Project.Models.Cast<RASPModelEntry>().Any(m => m.Name == modelName))
+            {
+                foreach (var m in rasp.Project.Models)
+                {
+                    if (m.Name == modelName) model = m; 
+                    m.Anims.Add(anim); break;
+                }
+
+            }
+            else
+            {
+                model.Name = modelName;
+                model.Anims.Add(anim);
+                rasp.Project.Models.Add(model);
+            }
+            
         }
         Debug.WriteLine(rasp);
         return rasp;

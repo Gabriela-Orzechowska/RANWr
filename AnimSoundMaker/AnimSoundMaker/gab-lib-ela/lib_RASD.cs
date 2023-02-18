@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.IO;
 using System.Windows.Documents;
@@ -286,5 +287,109 @@ public class lib_RASD
         }
 
     }   
+
+    public static void SaveBRASD(string filepath, RASD data)
+    {
+        BigEndianWriter writer = new BigEndianWriter(File.Open(filepath, FileMode.Create));
+
+        ulong dataOffset = 0x20;
+        ulong eventRelative = dataOffset + 0x8;
+
+        //Write Header
+        writer.Write("RASD", 0x00);
+        writer.Write((UInt16)0xFEFF, 0x04);
+        writer.Write((UInt16)0x0100, 0x06);
+        //Skip Lenght for now
+        writer.Write((UInt16)0x20, 0x0C);
+        writer.Write((UInt16)0x01, 0x0E);
+        writer.Write((UInt32)0x20, 0x10);
+        //Skip Lenght for now;
+
+        //Write Data Header
+        writer.Write("DATA", dataOffset + 0x00);
+        //Skip Lenght for now
+
+        //Write Event Header
+        Event[] events = data.AnimSound.Events.ToArray();
+        writer.Write((UInt32)data.AnimSound.FrameSize, eventRelative + 0x00);
+        writer.Write((UInt32)0x01000000, eventRelative + 0x04);
+        writer.Write((UInt32)0x0000000C, eventRelative + 0x08);
+        writer.Write((UInt32)events.Length, eventRelative + 0x0C);
+
+        //Write Frame Events
+        for(int i = 0; i < events.Length; i++)
+        {
+            Event @event = events[i];
+            ulong eventFrameOffset = eventRelative + (ulong)(0x10 + i * 0x14);
+            writer.Write((UInt32)@event.Start, eventFrameOffset + 0x00);
+            writer.Write((Int32)@event.End, eventFrameOffset + 0x04);
+            writer.Write((byte)ConvertFlagsToByte(@event), eventFrameOffset + 0x08);
+            writer.Write((byte)0x1, eventFrameOffset + 0x0A); //Unknown; put placeholder
+            writer.Write((UInt32)0x01000000, eventFrameOffset + 0x0C); //Unknown; put placeholder
+            //Skip Lenght for now
+        }
+
+        ulong soundEventPosition = eventRelative + (ulong)(0x10 + events.Length * 0x14);
+        for (int i = 0; i < events.Length; i++)
+        {
+            Event @event = events[i];
+            ulong eventFrameOffset = eventRelative + (ulong)(0x10 + i * 0x14);
+            ulong soundOffset = eventFrameOffset + 0x10;
+            ulong soundEvent = soundEventPosition - eventRelative;
+
+            writer.Write((UInt32)soundEvent, soundOffset);
+
+            WriteSoundEvent(writer, @event, soundEventPosition, out ulong lenght);
+            soundEventPosition += lenght;
+        }
+        ulong streamLenght = (ulong)writer.Length();
+        ulong streamEnd = (ulong) Math.Ceiling((float)streamLenght / 16) * 16;
+        Debug.WriteLine(streamLenght);
+        Debug.WriteLine(streamEnd);
+        //Fill to end
+        writer.Write((byte)0x0, streamEnd - 1);
+
+        //Fill Lenghts
+        writer.Write((UInt32)streamEnd, 0x08);
+        ulong dataSectionLenght = streamEnd - dataOffset;
+
+        writer.Write((UInt32)dataSectionLenght, dataOffset+0x4);
+        writer.Write((UInt32)dataSectionLenght, 0x14);
+
+
+        writer.CloseStream();
+    }
+
+    private static void WriteSoundEvent(BigEndianWriter writer, Event @event, ulong start, out ulong lenght, bool roundTo0x04 = true)
+    {
+        writer.Write((UInt32)0x00000000, start + 0x00);
+        writer.Write((UInt32)0xFFFFFFFF, start + 0x04);
+        writer.Write((UInt32)0x01000000, start + 0x08);
+        writer.Write((UInt32)0x00000020, start + 0x0C);
+        byte volume = (byte)@event.Volume;
+        if (volume == 127) volume++;
+        writer.Write(volume, start+ 0x10);
+        writer.Write(new byte[3], start + 0x11);
+        writer.Write((float)@event.Pitch, start + 0x14);
+        writer.Write((UInt32)0x00000000, start + 0x18);
+        writer.Write((UInt32)@event.UserParameter, start + 0x1C);
+
+        string name = @event.Name;
+        int nameLenght = name.Length + 1;
+        writer.Write(name, start + 0x20);
+        writer.Write((byte)0x0, start + 0x20 + (ulong)name.Length);
+        if (roundTo0x04)
+            nameLenght = (int) Math.Ceiling((float)nameLenght / 4) * 4;
+        lenght = 0x20 + (ulong)nameLenght;
+
+    } 
+
+    private static byte ConvertFlagsToByte(Event @event)
+    {
+        byte result = 0;
+        if (@event.Type == EventTypes.Trigger) result |= 0x1;
+        if(@event.End == -1) result |= 0x2;
+        return result;
+    }
     
 }

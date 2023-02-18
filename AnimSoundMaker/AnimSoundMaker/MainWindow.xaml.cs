@@ -3,17 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Printing;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
-using Xceed.Wpf.Toolkit.Panels;
 using static lib_RASD;
 using static lib_RASP;
 
@@ -263,12 +257,14 @@ namespace AnimSoundMaker
                 TreeViewItem itModel = new();
                 itModel.Header = model.Name;
                 itModel.Tag = "Model";
+                itModel.Name = model.Name; ;
                 itModel.IsExpanded = true;
 
                 foreach(var anim in model.Anims)
                 {
                     TreeViewItem itAnim = new();
                     itAnim.Header = anim.Name + ".rchr";
+                    itAnim.Name = anim.Name;
                     itAnim.Tag = "Animation";
                     itAnim.IsExpanded = true;
 
@@ -411,6 +407,7 @@ namespace AnimSoundMaker
             {
                 ProjectTree.ContextMenu.IsOpen = true;
                 currentTabItem = item;
+                currentTabItem.IsSelected= true;
             }
         }
 
@@ -466,8 +463,30 @@ namespace AnimSoundMaker
 
         private void CloseFile_Click(object sender, RoutedEventArgs e)
         {
+
+            MessageBoxResult result = MessageBox.Show("Are you sure to close this file?", "Close file confirmation", MessageBoxButton.YesNo);
+            if (result == MessageBoxResult.No) return;
+
             var item = currentTabItem;
-            
+            FileData? data = null;
+            foreach(var dat in datas)
+            {
+                if(dat.treeItem == item)
+                {
+                    data = dat; break;
+                }
+            }
+            if(data != null)
+            {
+                FileData actualData = (FileData)data; //I hate that sometimes I can reference anything if data types is nullable, other times it works perfectly when unde is null statement
+                if(TabControl.Items.Contains(actualData.tabItem)) TabControl.Items.Remove(actualData.tabItem);
+                datas.Remove(actualData);
+            }
+
+
+            loadedProject = RemoveSoundFromProject(item, (RASP)loadedProject);
+            ProjectTree.Items.Clear();
+            var itS = PopulateTree("", (RASP)loadedProject, "");
         }
     }
 }

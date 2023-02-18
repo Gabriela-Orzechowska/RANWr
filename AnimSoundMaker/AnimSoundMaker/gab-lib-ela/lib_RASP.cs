@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Windows.Controls;
 using System.Xml;
 using static lib_NW4R;
 using static lib_RASD;
@@ -154,7 +156,7 @@ public class lib_RASP
         return _rasp;
     }
 
-    public static RASP ProjectFromRASD(string name, RASD rasd)
+    public static RASP ProjectFromRASD(string name, RASD rasd, string folderName= "<null-model>")
     {
         RASPSoundEntry sound = new();
         sound.Data = rasd;
@@ -162,17 +164,59 @@ public class lib_RASP
         sound.FilePath = rasd.Header.Title;
 
         RASPAnimEntry anim = new();
-        anim.Name = "<null-anim>";
+        anim.Name = name;
         anim.Sounds.Add(sound);
 
         RASPModelEntry model = new();
-        model.Name = "<null-model>";
+        model.Name = folderName;
         model.Anims.Add(anim);
 
         RASP rasp = new();
         rasp.Project.Name = "<null-project>"; 
         rasp.Project.Models.Add(model);
 
+        return rasp;
+    }
+
+    public static RASP AddSoundToProject(string name, string modelName, string animName, RASD rasd, RASP rasp)
+    {
+        foreach(var model in rasp.Project.Models)
+        {
+            if (model.Name != modelName) continue;
+            foreach(var anim in model.Anims)
+            {
+                if(anim.Name != animName) continue;
+                RASPSoundEntry sound = new();
+                sound.Name = name;
+                sound.Data = rasd;
+                anim.Sounds.Add(sound);
+            }
+
+        }
+        return rasp;
+    }
+
+    public static RASP AddSoundToProject(TreeViewItem itAnim, string name, RASD rasd, RASP rasp)
+    {
+        string modelName = (itAnim.Parent as TreeViewItem).Header.ToString();
+
+        foreach(var model in rasp.Project.Models)
+        {
+            Debug.WriteLine(model.Name);
+            Debug.WriteLine(modelName);
+            if (model.Name != modelName) continue;
+
+            RASPSoundEntry sound = new();
+            sound.Name = name;
+            sound.Data = rasd;
+
+            RASPAnimEntry anim = new();
+            anim.Name = name;
+            anim.Sounds.Add(sound);
+
+            model.Anims.Add(anim);
+        }
+        Debug.WriteLine(rasp);
         return rasp;
     }
 

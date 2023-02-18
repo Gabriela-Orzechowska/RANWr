@@ -254,4 +254,32 @@ public class lib_RASP
         return rasp;
     }
 
+    public static RASP RemoveSoundFromProject(TreeViewItem itSound, RASP rasp)
+    {
+        TreeViewItem itAnim = itSound.Parent as TreeViewItem;
+        TreeViewItem itModel = itAnim.Parent as TreeViewItem;
+        TreeViewItem project = itModel.Parent as TreeViewItem;
+        RASPModelEntry? emptyModel = null;
+        foreach(var model in rasp.Project.Models)
+        {
+            if(model.Name == itModel.Name)
+            {
+                foreach(var anim in model.Anims)
+                {
+                    if(anim.Name == itAnim.Name)
+                    {
+                        model.Anims.Remove(anim);
+                        break;
+                    }
+                }
+            }
+            if (model.Anims.Count == 0) emptyModel = model;
+        }
+        if(emptyModel != null)
+        {
+            rasp.Project.Models.Remove((RASPModelEntry)emptyModel);
+        }
+        return rasp;
+    }
+
 }

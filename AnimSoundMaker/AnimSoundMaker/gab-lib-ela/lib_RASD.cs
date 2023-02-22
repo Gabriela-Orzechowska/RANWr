@@ -60,8 +60,7 @@ public class lib_RASD
         public uint Index;
         public uint Start { get; set; }
         public int End { get; set; }
-        [DisplayName("Playback Interval")]
-        public bool PlaybackInterval { get; set; }
+        public bool PlaybackInterval;
         public EventTypes Type { get; set; }
         public int IntType;
         public string StringType;

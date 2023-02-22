@@ -157,7 +157,7 @@ public class lib_RASP
         return _rasp;
     }
 
-    public static RASP ProjectFromRASD(string name, RASD rasd, string folderName= "<null-model>")
+    public static RASP ProjectFromRASD(string name, RASD rasd, string folderName= "null_model")
     {
         RASPSoundEntry sound = new();
         sound.Data = rasd;
@@ -233,15 +233,14 @@ public class lib_RASP
             anim.Name = name;
             anim.Sounds.Add(sound);
 
-            if (rasp.Project.Models.Cast<RASPModelEntry>().Any(m => m.Name == modelName))
-            {
-                foreach (var m in rasp.Project.Models)
-                {
-                    if (m.Name == modelName) model = m; 
-                    m.Anims.Add(anim); break;
-                }
 
+            RASPModelEntry m = rasp.Project.Models.Cast<RASPModelEntry>().FirstOrDefault(m => m.Name == modelName);
+            if(m.Name != null)
+            {
+                model = (RASPModelEntry) m;
+                model.Anims.Add(anim);
             }
+
             else
             {
                 model.Name = modelName;

@@ -60,13 +60,35 @@ namespace AnimSoundMaker
             InitializeComponent();
             this.AllowDrop = true;
             this.Drop += MainWindow_Drop;
+            this.KeyDown+= MainWindow_KeyDown;
             string[] args = Environment.GetCommandLineArgs();
             foreach(string arg in args.Skip(1))
             {
-                if (!File.Exists(arg)) continue;
-                TryImportFile(arg);
-                
+                TryImportFile(arg);      
             }         
+        }
+
+        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            
+            if(Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.S)
+            {
+                if (loadedProject == null) return;
+                TabItem currentTab = (TabItem)TabControl.SelectedItem;
+                if (currentTab == null) return;
+                string name = currentTab.Name.ToString().Replace("__", "_");
+                Editor_RASD? editor = null;
+                foreach (var dat in datas)
+                {
+                    if (dat.Name == name)
+                    {
+                        editor = dat.editor; break;
+                    }
+                }
+                if (editor == null) return;
+
+                TrySaveFile(editor.Path, name);
+            }
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -120,6 +142,7 @@ namespace AnimSoundMaker
 
         private void SaveAsFile_Click(object sender, RoutedEventArgs e)
         {
+            if (loadedProject == null) return;
             var dialog = new SaveFileDialog();  
             dialog.Filter = "All supported files|*.brasd;*.rasd|Binary Revolution Animation Sound Data|*.brasd|Revolution Animation Sound Data|*.rasd";
             bool? result = dialog.ShowDialog();
@@ -135,6 +158,7 @@ namespace AnimSoundMaker
 
         private void SaveFile_Click(object sender, RoutedEventArgs e)
         {
+            if (loadedProject == null) return;
             TabItem currentTab = (TabItem)TabControl.SelectedItem;
             if (currentTab == null) return;
             string name = currentTab.Name.ToString().Replace("__", "_");
@@ -357,8 +381,8 @@ namespace AnimSoundMaker
             Data.Creator = rasd.Header.CreatorName;
             Data.Generator = rasd.Header.Generator;
             Data.DateModified = rasd.Header.DataSaved;
-            PropertyBox.SelectedObject = Data;
-            PropertyBox.NameColumnWidth = 60;
+            //PropertyBox.SelectedObject = Data;
+            //PropertyBox.NameColumnWidth = 60;
         }
 
         private volatile TabItem hover;
@@ -498,4 +522,6 @@ namespace AnimSoundMaker
             var itS = PopulateTree("", (RASP)loadedProject, "");
         }
     }
+
+
 }

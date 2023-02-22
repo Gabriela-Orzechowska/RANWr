@@ -14,7 +14,8 @@
         <StackPanel Margin="5,0,0,0" Grid.RowSpan="2">
             <Menu>
                 <MenuItem Header=" _File ">
-                    <MenuItem Header="_New" Template="{DynamicResource SingleDropDownMenuItem}"/>
+                    <MenuItem Header="_New" Template="{DynamicResource SingleDropDownMenuItem}"
+                              Click="NewFile_Click"/>
                     <MenuItem Header="_Open" Template="{DynamicResource SingleDropDownMenuItem}"
                               Click="ImportFile_Click"/>
                     <MenuItem Header="_Save" Template="{DynamicResource SingleDropDownMenuItem}"

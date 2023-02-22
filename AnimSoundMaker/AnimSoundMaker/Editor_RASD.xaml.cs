@@ -68,11 +68,10 @@ namespace AnimSoundMaker
         private void AdjustColumns()
         {
             DataGrid.Columns.Last().Width = new DataGridLength(2, DataGridLengthUnitType.Star);
-            DataGrid.Columns[4].Width = new DataGridLength(1.5, DataGridLengthUnitType.Star);
-            DataGrid.Columns[2].Width = new DataGridLength(1.5, DataGridLengthUnitType.Star);
-            /*
-            DataGrid.Columns[2].Header = "Playback Interval";
+            DataGrid.Columns[3].Width = new DataGridLength(2, DataGridLengthUnitType.Star);
+            DataGrid.Columns[2].Width = new DataGridLength(1.25, DataGridLengthUnitType.Star);
             
+            /*
             DataGrid.Columns[0].CellStyle = FindResource("MyCellStyle") as Style;
             DataGrid.Columns[1].CellStyle = FindResource("MyCellStyle") as Style;
             DataGrid.Columns[5].CellStyle = FindResource("MyCellStyle") as Style;

@@ -14,19 +14,23 @@ using static lib_NW4R;
 
 public class lib_RASD
 {
+    [DefaultValue(null)]
     public class RASD : ClassBase
     {
         public Xml_Header Header;
         public AnimSound AnimSound;
         public string FilePath;
+        public bool newFile;
 
         public RASD()
         {
             Header = new();
             AnimSound = new();
+            FilePath = string.Empty;
+            newFile = false;
         }
     }
-
+    [DefaultValue(null)]
     public struct AnimSound
     {
         public uint FrameSize { get; set; }
@@ -54,7 +58,7 @@ public class lib_RASD
             handler?.Invoke(this, args);
         }
     }
-
+    [DefaultValue(null)]
     public class Event : ClassBase
     {
         public uint Index;

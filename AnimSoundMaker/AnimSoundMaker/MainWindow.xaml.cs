@@ -131,7 +131,7 @@ namespace AnimSoundMaker
         private void ImportFile_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFileDialog();
-            dialog.Filter = "All supported files|*.brasd;*.rasd|Binary Revolution Animation Sound Data|*.brasd|Revolution Animation Sound Data|*.rasd";
+            dialog.Filter = "All supported files|*.brasd;*.rasd;*.rasp|Binary Revolution Animation Sound Data|*.brasd|Revolution Animation Sound Data|*.rasd";
             dialog.Multiselect = true;
             bool? result = dialog.ShowDialog();
 
@@ -316,7 +316,12 @@ namespace AnimSoundMaker
                     if (loadedProject == null) rasp = ProjectFromRASD(shortName, rasd, Path.GetFileName(Path.GetDirectoryName(path)));
                     else rasp = AddSoundToProject(defaultAnim, shortName, rasd, (RASP)loadedProject, Path.GetFileName(Path.GetDirectoryName(path)));
                     rasds.Add(rasd);
-                    break;                
+                    break;
+                case ".rasp":
+                    RASP? _rasp = TryReadRASP(path);
+                    if (_rasp != null) rasp = (RASP)_rasp;
+                    break;
+
             }
 
             loadedProject = rasp;

@@ -66,8 +66,6 @@ public class lib_RASD
         public int End { get; set; }
         public bool PlaybackInterval;
         public EventTypes Type { get; set; }
-        public int IntType;
-        public string StringType;
         public string Name { get; set; }
         public float Pitch { get; set; }
         public int Volume { get; set; }
@@ -81,8 +79,6 @@ public class lib_RASD
             End = -1;
             PlaybackInterval = false;
             Type = EventTypes.Trigger;
-            IntType = 1;
-            StringType = "Trigger";
             Name = "";
             Pitch = 1;
             Volume = 127;
@@ -146,8 +142,6 @@ public class lib_RASD
                 {
                     case "frame":
                         _new.Type = _node.Attributes[0].Value == "trigger" ? EventTypes.Trigger : EventTypes.Range;
-                        _new.IntType = (int)_new.Type;
-                        _new.StringType = _new.Type.ToString();
                         foreach(XmlNode _frame in _node)
                         {
                             switch(_frame.Name)
@@ -225,8 +219,6 @@ public class lib_RASD
             _event.End = r.ReadInt32(0x4);
             _event.PlaybackInterval = _event.End > -1;
             _event.Type = (r.ReadByte(0x08) & 0x1) != 0 ? EventTypes.Trigger : EventTypes.Range;
-            _event.IntType = (int) _event.Type;
-            _event.StringType = _event.Type.ToString();
             long soundDataOffset = r.ReadUInt32(0x10) + dataHeaderEnding;
             Debug.WriteLine(soundDataOffset);
             stream.Position = soundDataOffset;
@@ -391,8 +383,10 @@ public class lib_RASD
     private static byte ConvertFlagsToByte(Event @event)
     {
         byte result = 0;
-        if (@event.Type == EventTypes.Trigger) result |= 0x1;
-        if(@event.End == -1) result |= 0x2;
+        if (@event.Type == EventTypes.Trigger) 
+            result |= 0x1;
+        if (@event.End == -1) 
+            result |= 0x2;
         return result;
     }
     

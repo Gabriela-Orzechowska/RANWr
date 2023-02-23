@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Controls;
 using System.Xml;
@@ -89,6 +90,8 @@ public class lib_RASP
         Xml_Header? xml_Header = TryReadHeader(doc);
         if (doc != null) _rasp.Header = xml_Header;
 
+        _rasp.Project.Name = Path.GetFileNameWithoutExtension(filePath);
+
         XmlNode body = root.LastChild;
         XmlNode anim_project, sound_archive, project_settings, model_array;
         anim_project = sound_archive = project_settings = model_array = null;
@@ -120,30 +123,45 @@ public class lib_RASP
                 switch(m.Name)
                 {
                     case "file":
-                        model.FilePath = m.Attributes["path"].Value; break;
+                        model.FilePath = m.Attributes["path"].Value;
+                        model.Name = Path.GetFileNameWithoutExtension(model.FilePath);
+                        break;
                     case "anim_array":
                         foreach(XmlNode a in m)
                         {
                             RASPAnimEntry anim = new();
-                            switch (a.Name)
+                            foreach (XmlNode an in a)
                             {
-                                case "file":
-                                    anim.FilePath = a.Attributes["path"].Value; break;
-                                case "anim_sound_array":
-                                    foreach(XmlNode s in a)
-                                    {
-                                        RASPSoundEntry sound = new();
-                                        switch (s.Name)
+                                
+
+                                switch (an.Name)
+                                {
+                                    case "file":
+                                        anim.FilePath = Path.GetDirectoryName(filePath) + @"\" + an.Attributes["path"].Value;
+                                        anim.Name = Path.GetFileNameWithoutExtension(anim.FilePath);
+                                        break;
+                                    case "anim_sound_array":
+                                        foreach (XmlNode s in an)
                                         {
-                                            case "file":
-                                                sound.FilePath = s.Attributes["path"].Value;
-                                                sound.Data = TryOpenRASD(sound.FilePath);
-                                                break;
+                                            RASPSoundEntry sound = new();
+                                            foreach (XmlNode sn in s)
+                                            {
+                                                switch (sn.Name)
+                                                {
+                                                    case "file":
+                                                        sound.FilePath = Path.GetDirectoryName(filePath) + @"\" + sn.Attributes["path"].Value;
+                                                        sound.Data = TryOpenRASD(sound.FilePath);
+                                                        sound.Name = Path.GetFileNameWithoutExtension(sound.FilePath);
+                                                        break;
+
+                                                }
+                                                anim.Sounds.Add(sound);
+                                            }
 
                                         }
-                                        anim.Sounds.Add(sound);
-                                    }
-                                    break;
+                                        break;
+                                }
+                                
                             }
                             model.Anims.Add(anim);
                         }

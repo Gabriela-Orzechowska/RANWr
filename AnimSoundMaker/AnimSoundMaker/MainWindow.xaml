@@ -31,6 +31,12 @@
                 <MenuItem Header=" _Help "/>
             </Menu>
             <Menu>
+                <MenuItem Width="25" Height="25" Click="NewFile_Click">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/NewDocumentLight.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                
                 <MenuItem Width="25" Height="25" Click="ImportFile_Click">
                     <MenuItem.Icon>
                         <Image Source="/Icons/FolderOpened.png" />

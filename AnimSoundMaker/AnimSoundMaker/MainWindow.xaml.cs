@@ -80,14 +80,24 @@ namespace AnimSoundMaker
                 if (loadedProject == null) return;
                 TabItem currentTab = (TabItem)TabControl.SelectedItem;
                 if (currentTab == null) return;
-                string name = currentTab.Name.ToString().Replace("__", "_");
+                char[] tabHeader = "T_".ToCharArray();
+                string name = currentTab.Name.ToString().Replace("__", "_").TrimStart(tabHeader);
                 Editor_RASD? editor = null;
+                bool newFile = false;
                 foreach (var dat in datas)
                 {
                     if (dat.Name == name)
                     {
-                        editor = dat.editor; break;
+                        editor = dat.editor; 
+                        newFile = dat.newFile; break;
                     }
+                }
+                if (newFile)
+                {
+                    Debug.WriteLine("Save as:");
+                    SaveAsTreeItem_Click(sender, e);
+                    Debug.WriteLine("Nothing");
+                    return;
                 }
                 if (editor == null) return;
 
@@ -106,7 +116,7 @@ namespace AnimSoundMaker
 
         public void MainWindow_Drop(object sender, DragEventArgs e)
         {
-            if (e.Data is System.Windows.DataObject && ((System.Windows.DataObject)e.Data).ContainsFileDropList())
+            if (e.Data is DataObject && ((DataObject)e.Data).ContainsFileDropList())
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 foreach (var file in files)
@@ -152,6 +162,7 @@ namespace AnimSoundMaker
             bool newFile = false;
             foreach (var dat in datas)
             {
+
                 if (dat.treeItem.Name == item.Name)
                 {
                     tabItem = dat.tabItem;
@@ -215,8 +226,8 @@ namespace AnimSoundMaker
             {
                 TabItem currentTab = (TabItem)TabControl.SelectedItem;
                 if (currentTab == null) return;
-
-                string name = currentTab.Name.ToString().Replace("__", "_");
+                char[] tabHeader = "T_".ToCharArray();
+                string name = currentTab.Name.ToString().Replace("__", "_").TrimStart(tabHeader);
 
                 TrySaveFile(dialog.FileName, name);
             }
@@ -227,7 +238,8 @@ namespace AnimSoundMaker
             if (loadedProject == null) return;
             TabItem currentTab = (TabItem)TabControl.SelectedItem;
             if (currentTab == null) return;
-            string name = currentTab.Name.ToString().Replace("__", "_");
+            char[] tabHeader = "T_".ToCharArray();
+            string name = currentTab.Name.ToString().Replace("__", "_").TrimStart(tabHeader);
             Editor_RASD? editor = null;
             bool newFile = false;
             foreach (var dat in datas)
@@ -358,6 +370,10 @@ namespace AnimSoundMaker
                 case ".brasd":
                     SaveBRASD(path, data);
                     break;
+                default:
+                    path += ".brasd";
+                    SaveBRASD(path, data);
+                    break;
             }
             if (newFile)
             {
@@ -386,15 +402,15 @@ namespace AnimSoundMaker
                 TreeViewItem itModel = new();
                 itModel.Header = model.Name;
                 itModel.Tag = "Model";
-                itModel.Name = model.Name; ;
+                itModel.Name = "M_" + model.Name;
                 itModel.IsExpanded = true;
 
                 foreach(var anim in model.Anims)
                 {
                     TreeViewItem itAnim = new();
                     itAnim.Header = anim.Name + ".rchr";
-                    itAnim.Name = anim.Name;
                     itAnim.Tag = "Animation";
+                    itAnim.Name = "A_" + anim.Name;
                     itAnim.IsExpanded = true;
 
                     foreach (var sound in anim.Sounds)
@@ -402,6 +418,7 @@ namespace AnimSoundMaker
                         TreeViewItem itSound = new();
                         itSound.Header = sound.Name + ".rasd";
                         itSound.Tag = "Sound";
+                        itSound.Name = "S_" + sound.Name;
                         itSound.MouseDoubleClick += TreeViewItem_DoubleClick;
                         itSound.ContextMenuOpening += ProjectTree_ContextMenuOpening;
 
@@ -452,7 +469,7 @@ namespace AnimSoundMaker
             TabItem tabItem = new TabItem();
             Debug.WriteLine(name);
             tabItem.Header = $@"{tabName} - {name.Replace("_", "__")}";
-            tabItem.Name = name;
+            tabItem.Name = "T_" + name;
             tabItem.IsSelected = true;
 
             editor= new Editor_RASD();
@@ -544,6 +561,7 @@ namespace AnimSoundMaker
         {
             if(item == null) item = currentTabItem;
             FileData data = datas.Cast<FileData>().FirstOrDefault(d => d.treeItem == item);
+
             if (data.ModelName != null)
             {
                 if (TabControl.Items.Contains(data.tabItem)) TabControl.Items.Remove(data.tabItem);

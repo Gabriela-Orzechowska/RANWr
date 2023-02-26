@@ -218,8 +218,10 @@ public class lib_RASP
     public static RASP AddSoundToProject(TreeViewItem itAnim, string name, RASD rasd, RASP rasp, string? modelName = null)
     {
         bool hadModelName = modelName != null;
+        char[] model_header = "M_".ToCharArray();
         if (!hadModelName)
-            modelName = (itAnim.Parent as TreeViewItem).Header.ToString();
+            
+            modelName = (itAnim.Parent as TreeViewItem).Header.ToString().TrimStart(model_header);
 
         if (!hadModelName)
         {
@@ -279,11 +281,11 @@ public class lib_RASP
         RASPModelEntry? emptyModel = null;
         foreach(var model in rasp.Project.Models)
         {
-            if(model.Name == itModel.Name)
+            if("M_" + model.Name == itModel.Name)
             {
                 foreach(var anim in model.Anims)
                 {
-                    if(anim.Name == itAnim.Name)
+                    if("A_" + anim.Name == itAnim.Name)
                     {
                         model.Anims.Remove(anim);
                         break;

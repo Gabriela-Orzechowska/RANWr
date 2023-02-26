@@ -33,8 +33,8 @@ namespace AnimSoundMaker
         public Editor_RASD()
         {
             InitializeComponent();
-
         }
+
 
         public void LoadData(RASD rasd)
         {

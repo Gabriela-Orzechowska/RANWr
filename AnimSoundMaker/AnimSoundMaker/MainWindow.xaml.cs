@@ -65,11 +65,26 @@ namespace AnimSoundMaker
             this.AllowDrop = true;
             this.Drop += MainWindow_Drop;
             this.KeyDown+= MainWindow_KeyDown;
+            this.PreviewMouseDown += MainWindow_PreviewMouseDown;
             string[] args = Environment.GetCommandLineArgs();
             foreach(string arg in args.Skip(1))
             {
                 TryImportFile(arg);      
             }         
+        }
+                
+        private void MainWindow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount < 2)
+            {
+                FileData data = datas.Cast<FileData>().FirstOrDefault(i => i.treeItem == currentTreeViewItem);
+                if (data.editor != null)
+                {
+                    var i = data.editor.DataGrid.CommitEdit();
+                }
+                
+                Keyboard.ClearFocus();
+            }
         }
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
@@ -155,7 +170,7 @@ namespace AnimSoundMaker
         }
         private void SaveTreeItem_Click(object sender, RoutedEventArgs e)
         {
-            var item = currentTabItem;
+            var item = currentTreeViewItem;
             TabItem? tabItem = null;
             Editor_RASD? editor = null;
             string name = "";
@@ -194,7 +209,7 @@ namespace AnimSoundMaker
             bool? result = dialog.ShowDialog();
             if (result == true)
             {
-                var item = currentTabItem;
+                var item = currentTreeViewItem;
                 TabItem? tabItem = null;
                 Editor_RASD? editor = null;
                 string name = "";
@@ -252,6 +267,13 @@ namespace AnimSoundMaker
                     break;
                 }
             }
+            FileData data = datas.Cast<FileData>().FirstOrDefault(i => i.treeItem == currentTreeViewItem);
+            if (data.editor != null)
+            {
+                var i = data.editor.DataGrid.CommitEdit();
+            }
+
+            Keyboard.ClearFocus();
             if (newFile)
             {
                 Debug.WriteLine("Save as:");
@@ -482,7 +504,7 @@ namespace AnimSoundMaker
             tabItem.MouseEnter += TabItem_MouseEnter;
 
             TabControl.Items.Add(tabItem);
-            currentTabItem = treeItem;
+            currentTreeViewItem = treeItem;
             return tabItem;
         }
 
@@ -522,6 +544,9 @@ namespace AnimSoundMaker
             }
         }
 
+
+
+
         private void TabItem_Drop(object sender, DragEventArgs e)
         {
             if (e.Source is TabItem tabItemTarget &&
@@ -537,7 +562,7 @@ namespace AnimSoundMaker
             }
         }
 
-        private volatile TreeViewItem currentTabItem;
+        private volatile TreeViewItem currentTreeViewItem;
 
         private void ProjectTree_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
@@ -550,8 +575,8 @@ namespace AnimSoundMaker
             else
             {
                 ProjectTree.ContextMenu.IsOpen = true;
-                currentTabItem = item;
-                currentTabItem.IsSelected= true;
+                currentTreeViewItem = item;
+                currentTreeViewItem.IsSelected= true;
             }
         }
 
@@ -559,7 +584,7 @@ namespace AnimSoundMaker
 
         private void CloseFile(TreeViewItem item = null)
         {
-            if(item == null) item = currentTabItem;
+            if(item == null) item = currentTreeViewItem;
             FileData data = datas.Cast<FileData>().FirstOrDefault(d => d.treeItem == item);
 
             if (data.ModelName != null)
@@ -579,7 +604,7 @@ namespace AnimSoundMaker
             MessageBoxResult result = MessageBox.Show("Are you sure to close this file?", "Close file confirmation", MessageBoxButton.YesNo);
             if (result == MessageBoxResult.No) return;
 
-            var item = currentTabItem;
+            var item = currentTreeViewItem;
             CloseFile(item);
         }
 

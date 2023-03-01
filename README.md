@@ -8,8 +8,7 @@
 |--------|----------|----------|
 | .rasd  | Yes      | Yes      |
 | .brasd | Yes      | Yes      |
-| .rasp  | No       | No       |
+| .rasp  | Yes       | No       |
 
 ## Credits
-* Extended WPF Toolkit - https://github.com/xceedsoftware/wpftoolkit
 * WPF DarkTheme - https://github.com/AngryCarrot789/WPFDarkTheme

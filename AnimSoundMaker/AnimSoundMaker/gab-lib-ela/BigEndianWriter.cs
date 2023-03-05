@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Printing.IndexedProperties;
@@ -36,6 +37,34 @@ namespace AnimSoundMaker
             Contract.EndContractBlock();
             _stream.Write(buffer, index, (int)count);
             if (offset != null) _stream.Position = start;
+            
+        }
+
+        public void Write<T>(T value, ulong? offset = null) where T : IComparable<T>
+        {   
+            object _val = (object)value;
+            switch (value.GetType().Name.ToLower())
+            {
+                case "int16":
+                    Write((Int16)_val, (UInt16)offset); break;
+                case "int32":
+                    Write((Int32)_val, (UInt16)offset); break;
+                case "int64":
+                    Write((Int64)_val, (UInt16)offset); break;
+                case "uint16":
+                    Write((UInt16)_val, (UInt16)offset); break;
+                case "uint32":
+                    Write((UInt32)_val, (UInt16)offset); break;
+                case "uint64":
+                    Write((UInt64)_val, (UInt16)offset); break;
+                case "byte":
+                    Write((byte)_val, (UInt16)offset); break;
+                case "float":
+                    Write((float)_val, (UInt16)offset); break;
+                case "string":
+                    Write((string)_val, (UInt16)offset); break;
+
+            }
             
         }
 

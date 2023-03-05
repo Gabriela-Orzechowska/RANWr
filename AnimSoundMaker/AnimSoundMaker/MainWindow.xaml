@@ -12,7 +12,7 @@
             <RowDefinition Height="111*"/>
         </Grid.RowDefinitions>
         <StackPanel Margin="5,0,0,0" Grid.RowSpan="2">
-            <Menu>
+            <Menu x:Name="MainMenu">
                 <MenuItem Header=" _File ">
                     <MenuItem Header="_New" Template="{DynamicResource SingleDropDownMenuItem}"
                               Click="NewFile_Click"/>

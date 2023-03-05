@@ -50,6 +50,12 @@ namespace AnimSoundMaker
             FrameCount.Text = frameSize.ToString();
         }
 
+        public void ConfirmAnyEdits()
+        {
+            Keyboard.ClearFocus();
+            DataGrid.CommitEdit();
+        }
+
         public RASD GetData()
         {
             List<Event> newEvent = new();

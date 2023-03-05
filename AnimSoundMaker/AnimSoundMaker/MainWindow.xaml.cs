@@ -75,16 +75,23 @@ namespace AnimSoundMaker
                 
         private void MainWindow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
+            /*
             if (e.ClickCount < 2)
             {
                 FileData data = datas.Cast<FileData>().FirstOrDefault(i => i.treeItem == currentTreeViewItem);
                 if (data.editor != null)
                 {
-                    var i = data.editor.DataGrid.CommitEdit();
+                    Debug.WriteLine(data.editor.DataGrid.);
+                    if(data.editor.DataGrid.SelectedCells.Count > 0)
+                    {
+                        var i = data.editor.DataGrid.CommitEdit();
+                        Keyboard.ClearFocus();
+                    }
+                    
                 }
-                
-                Keyboard.ClearFocus();
+                               
             }
+            */
         }
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
@@ -381,6 +388,8 @@ namespace AnimSoundMaker
                 }
             }
             if (editor == null) return;
+
+            editor.ConfirmAnyEdits();
 
             RASD data = editor.GetData();
 

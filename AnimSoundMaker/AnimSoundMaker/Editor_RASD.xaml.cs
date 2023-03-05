@@ -140,31 +140,38 @@ namespace AnimSoundMaker
         {
             string data = Clipboard.GetText();
             if (data == null) return;
-            string[] splitData = data.Split("\t");
-            if (splitData.Length == 8)
+            string[] splitEntries = data.Split('\n');
+            
+            foreach (var entry in splitEntries)
             {
-                Event @event = new();
-                @event.Start = uint.Parse(splitData[0]);
-                @event.End = int.Parse(splitData[1]);
-                @event.Type = splitData[2] == "Trigger" ? lib_RASD.EventTypes.Trigger : lib_RASD.EventTypes.Range;
-                @event.Name = splitData[3];
-                @event.Pitch = int.Parse(splitData[4]);
-                @event.Volume = int.Parse(splitData[5]);
-                @event.UserParameter = uint.Parse(splitData[6]);
-                @event.Comment = splitData[7];
-                Events.Add(@event);
-            }
-            else if(splitData.Length == 1) {
-                if (DataGrid.CurrentItem is not Event) return;
-                
-                Event @event = (Event)DataGrid.CurrentItem;
-                var pasteData = splitData[0];
-                var columnIndex = DataGrid.CurrentColumn.DisplayIndex;
-                var rowIndex = DataGrid.SelectedIndex;
+                string[] splitData = entry.Split("\t");
+                if (splitData.Length % 8 == 0)
+                {
+                    int count = splitData.Length / 8;
+                    Event @event = new();
+                    @event.Start = uint.Parse(splitData[0]);
+                    @event.End = int.Parse(splitData[1]);
+                    @event.Type = splitData[2] == "Trigger" ? lib_RASD.EventTypes.Trigger : lib_RASD.EventTypes.Range;
+                    @event.Name = splitData[3];
+                    @event.Pitch = int.Parse(splitData[4]);
+                    @event.Volume = int.Parse(splitData[5]);
+                    @event.UserParameter = uint.Parse(splitData[6]);
+                    @event.Comment = splitData[7];
+                    Events.Add(@event);
+                }
+                else if (splitData.Length == 1)
+                {
+                    if (DataGrid.CurrentItem is not Event) return;
 
-                //TODO
+                    Event @event = (Event)DataGrid.CurrentItem;
+                    var pasteData = splitData[0];
+                    var columnIndex = DataGrid.CurrentColumn.DisplayIndex;
+                    var rowIndex = DataGrid.SelectedIndex;
+
+                    //TODO
 
 
+                }
             }
         }
     }

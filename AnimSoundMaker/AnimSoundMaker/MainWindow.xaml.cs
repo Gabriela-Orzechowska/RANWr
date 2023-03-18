@@ -9,8 +9,9 @@ using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using static lib_RASD;
-using static lib_RASP;
+using gablibela;
+using static gablibela.lib_RASP;
+using static gablibela.lib_RASD;
 
 namespace AnimSoundMaker
 {
@@ -54,7 +55,7 @@ namespace AnimSoundMaker
         public BasicData Data { get; set; }
 
         public List<RASD> loadedFiles = new List<RASD>();
-        public RASP? loadedProject;
+        public lib_RASP.RASP? loadedProject;
         public TreeViewItem? defaultNode = null;
         public List<FileData> datas = new();
         public TreeViewItem defaultAnim;
@@ -330,7 +331,7 @@ namespace AnimSoundMaker
         private RASD? TryImportFile(string path)
         {
             RASD? rasd = null;
-            RASP rasp = new();
+            lib_RASP.RASP rasp = new();
 
             List<RASD?> rasds = new();
 
@@ -349,25 +350,25 @@ namespace AnimSoundMaker
                 case ".brasd":
                     rasd = TryOpenBRASD(path);
                     if (loadedProject == null) rasp = ProjectFromRASD(shortName, rasd, Path.GetFileName(Path.GetDirectoryName(path)));
-                    else rasp = AddSoundToProject(defaultAnim, shortName, rasd, (RASP)loadedProject, Path.GetFileName(Path.GetDirectoryName(path)));
+                    else rasp = AddSoundToProject(defaultAnim, shortName, rasd, (lib_RASP.RASP)loadedProject, Path.GetFileName(Path.GetDirectoryName(path)));
                     rasds.Add(rasd);
                     break;
                 case ".rasd":
                     rasd = TryOpenRASD(path);
                     if (loadedProject == null) rasp = ProjectFromRASD(shortName, rasd, Path.GetFileName(Path.GetDirectoryName(path)));
-                    else rasp = AddSoundToProject(defaultAnim, shortName, rasd, (RASP)loadedProject, Path.GetFileName(Path.GetDirectoryName(path)));
+                    else rasp = AddSoundToProject(defaultAnim, shortName, rasd, (lib_RASP.RASP)loadedProject, Path.GetFileName(Path.GetDirectoryName(path)));
                     rasds.Add(rasd);
                     break;
                 case ".rasp":
-                    RASP? _rasp = TryReadRASP(path);
-                    if (_rasp != null) rasp = (RASP)_rasp;
+                    lib_RASP.RASP? _rasp = TryReadRASP(path);
+                    if (_rasp != null) rasp = (lib_RASP.RASP)_rasp;
                     break;
 
             }
 
             loadedProject = rasp;
             ProjectTree.Items.Clear();
-            var itS = PopulateTree(shortName, (RASP)loadedProject, path);
+            var itS = PopulateTree(shortName, (lib_RASP.RASP)loadedProject, path);
             //LoadBasicData(rasd);
             return rasd;
         }
@@ -417,7 +418,7 @@ namespace AnimSoundMaker
         }
 
 
-        private List<TreeViewItem> PopulateTree(string name, RASP rasp, string path = "")
+        private List<TreeViewItem> PopulateTree(string name, lib_RASP.RASP rasp, string path = "")
         {
             Debug.WriteLine("Populate Tree");
             AnimSoundProject project = rasp.Project;
@@ -621,13 +622,13 @@ namespace AnimSoundMaker
         {
             RASD rasd = new();
             rasd.newFile = true;
-            RASP rasp;
+            lib_RASP.RASP rasp;
             int newSounds = datas.Cast<FileData>().Count(i => i.newFile);
             if (loadedProject == null) rasp = ProjectFromRASD($"new_sound_{newSounds}", rasd, "new_model");
-            else rasp = AddSoundToProject(defaultAnim, $"new_sound_{newSounds}", rasd, (RASP)loadedProject, "new_model");
+            else rasp = AddSoundToProject(defaultAnim, $"new_sound_{newSounds}", rasd, (lib_RASP.RASP)loadedProject, "new_model");
             loadedProject = rasp;
             ProjectTree.Items.Clear();
-            var itS = PopulateTree($"new_sound_{newSounds}", (RASP)loadedProject);
+            var itS = PopulateTree($"new_sound_{newSounds}", (lib_RASP.RASP)loadedProject);
         }
     }
 

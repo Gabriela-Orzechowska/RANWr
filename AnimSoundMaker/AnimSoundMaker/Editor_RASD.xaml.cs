@@ -18,7 +18,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using static lib_RASD;
+using static gablibela.lib_RASD;
 
 namespace AnimSoundMaker
 {
@@ -151,7 +151,7 @@ namespace AnimSoundMaker
                     Event @event = new();
                     @event.Start = uint.Parse(splitData[0]);
                     @event.End = int.Parse(splitData[1]);
-                    @event.Type = splitData[2] == "Trigger" ? lib_RASD.EventTypes.Trigger : lib_RASD.EventTypes.Range;
+                    @event.Type = (gablibela.lib_RASD.EventTypes)(splitData[2] == "Trigger" ? EventTypes.Trigger : EventTypes.Range);
                     @event.Name = splitData[3];
                     @event.Pitch = int.Parse(splitData[4]);
                     @event.Volume = int.Parse(splitData[5]);

@@ -1,66 +1,70 @@
 ﻿using System.Xml;
 
-public class lib_NW4R
+namespace gablibela
 {
-    public class Xml_Header
+    public class lib_NW4R
     {
-        public string CreatorName { get; set; }
-        public string HostName { get; set; }
-        public string DataSaved { get; set; }
-        public string Title { get; set; }
-        public string Generator { get; set; }
-        public string GeneratorVersion { get; set; }
-    }
-
-    public static Xml_Header? TryReadHeader(XmlDocument doc)
-    {
-        XmlElement root = doc.DocumentElement;
-        Xml_Header header = new Xml_Header();
-
-        if (root.Name != "ranwr_snd")
+        public class Xml_Header
         {
-            if (root.Name != "nintendoware_snd")
-                return null;
+            public string CreatorName { get; set; }
+            public string HostName { get; set; }
+            public string DataSaved { get; set; }
+            public string Title { get; set; }
+            public string Generator { get; set; }
+            public string GeneratorVersion { get; set; }
         }
 
-        XmlNode head = root.FirstChild;
-        foreach (XmlNode n in head)
+        public static Xml_Header? TryReadHeader(XmlDocument doc)
         {
-            switch (n.Name)
+            XmlElement root = doc.DocumentElement;
+            Xml_Header header = new Xml_Header();
+
+            if (root.Name != "ranwr_snd")
             {
-                case "create":
-                    foreach (XmlAttribute attr in n.Attributes)
-                    {
-                        switch (attr.Name)
-                        {
-                            case "user":
-                                header.CreatorName = attr.Value; break;
-                            case "host":
-                                header.HostName = attr.Value; break;
-                            case "date":
-                                header.DataSaved = attr.Value; break;
-                        }
-                    }
-                    break;
-                case "generator":
-                    foreach (XmlAttribute attr in n.Attributes)
-                    {
-                        switch (attr.Name)
-                        {
-                            case "name":
-                                header.Generator = attr.Value; break;
-                            case "version":
-                                header.GeneratorVersion = attr.Value; break;
-                        }
-                    }
-                    break;
-                case "title":
-                    header.Title = n.InnerText; break;
+                if (root.Name != "nintendoware_snd")
+                    return null;
             }
-        }
-        return header;
-    }
 
+            XmlNode head = root.FirstChild;
+            foreach (XmlNode n in head)
+            {
+                switch (n.Name)
+                {
+                    case "create":
+                        foreach (XmlAttribute attr in n.Attributes)
+                        {
+                            switch (attr.Name)
+                            {
+                                case "user":
+                                    header.CreatorName = attr.Value; break;
+                                case "host":
+                                    header.HostName = attr.Value; break;
+                                case "date":
+                                    header.DataSaved = attr.Value; break;
+                            }
+                        }
+                        break;
+                    case "generator":
+                        foreach (XmlAttribute attr in n.Attributes)
+                        {
+                            switch (attr.Name)
+                            {
+                                case "name":
+                                    header.Generator = attr.Value; break;
+                                case "version":
+                                    header.GeneratorVersion = attr.Value; break;
+                            }
+                        }
+                        break;
+                    case "title":
+                        header.Title = n.InnerText; break;
+                }
+            }
+            return header;
+        }
+
+
+    }
 
 }
 

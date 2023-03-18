@@ -8,17 +8,17 @@ using System.Text;
 using static System.BitConverter;
 using static System.Text.Encoding;
 
-namespace AnimSoundMaker
+namespace gablibela
 {
-    public class BigEndianWriter
+    public class BetterBinaryWriter
     {
         private static Stream _stream;
         private static Encoding _encoding;
 
-        public BigEndianWriter(Stream input) : this(input, Default)
+        public BetterBinaryWriter(Stream input) : this(input, Default)
         {
         }
-        public BigEndianWriter(Stream input, Encoding encoding)
+        public BetterBinaryWriter(Stream input, Encoding encoding)
         {
             _stream = input;
             _encoding = encoding;
@@ -46,23 +46,23 @@ namespace AnimSoundMaker
             switch (value.GetType().Name.ToLower())
             {
                 case "int16":
-                    Write((Int16)_val, (UInt16)offset); break;
+                    Write((Int16)_val, offset); break;
                 case "int32":
-                    Write((Int32)_val, (UInt16)offset); break;
+                    Write((Int32)_val, offset); break;
                 case "int64":
-                    Write((Int64)_val, (UInt16)offset); break;
+                    Write((Int64)_val, offset); break;
                 case "uint16":
-                    Write((UInt16)_val, (UInt16)offset); break;
+                    Write((UInt16)_val, offset); break;
                 case "uint32":
-                    Write((UInt32)_val, (UInt16)offset); break;
+                    Write((UInt32)_val, offset); break;
                 case "uint64":
-                    Write((UInt64)_val, (UInt16)offset); break;
+                    Write((UInt64)_val, offset); break;
                 case "byte":
-                    Write((byte)_val, (UInt16)offset); break;
+                    Write((byte)_val, offset); break;
                 case "float":
-                    Write((float)_val, (UInt16)offset); break;
+                    Write((float)_val, offset); break;
                 case "string":
-                    Write((string)_val, (UInt16)offset); break;
+                    Write((string)_val, offset); break;
 
             }
             

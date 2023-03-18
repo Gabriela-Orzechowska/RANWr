@@ -5,16 +5,16 @@ using System.Text;
 using static System.BitConverter;
 using static System.Text.Encoding;
 
-namespace AnimSoundMaker
+namespace gablibela
 {
-    public class BigEndianReader
+    public class BetterBinaryReader
     {
         private static Stream _stream;
         private static Encoding _encoding;
 
-        public BigEndianReader(Stream input): this(input, Default) {
+        public BetterBinaryReader(Stream input): this(input, Default) {
         }
-        public BigEndianReader(Stream input, Encoding encoding)
+        public BetterBinaryReader(Stream input, Encoding encoding)
         {
             _stream = input;
             _encoding = encoding;

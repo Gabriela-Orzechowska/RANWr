@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Printing.IndexedProperties;
-using System.Reflection;
-using System.Reflection.Emit;
 using System.Text;
+using System.Runtime.InteropServices;
 using static System.BitConverter;
 using static System.Text.Encoding;
 
@@ -95,13 +92,20 @@ namespace gablibela
             Array.Reverse(value);
             return value;
         }
-
-
         public long Length() => _stream.Length;
 
         public long Position() => _stream.Position;
 
+        public T ReadStruct<T>(long? offset = null)
+        {
+            byte[] bytes = ReadBytes(Marshal.SizeOf(typeof(T)), offset);
 
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            T struc = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            handle.Free();
+
+            return struc;
+        }
 
     }
 }

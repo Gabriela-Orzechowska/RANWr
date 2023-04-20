@@ -2,7 +2,7 @@
  RANWr (RANWr Ain't NintendoWare) is set of editors for various Wii file formats.
  
 # Current Tools
-## AnimSoundMaker: In Progress
+## AnimSoundMaker: Early Alpha
 #### Supported File Formats
 | Format | Can Open | Can Save |
 |--------|----------|----------|
@@ -10,7 +10,7 @@
 | .brasd | Yes      | Yes      |
 | .rasp  | Yes       | No       |
 
-## ArchiveExplorer
+## ArchiveExplorer: In Progress
 ### ranwr-arc
 Command-based Tool for managing Wii archives
 #### Compression

@@ -21,10 +21,9 @@ namespace gablibela
             }
 
             [StructLayout(LayoutKind.Sequential)]
-            public unsafe struct NodeData
+            public struct NodeData
             {
-                public byte isDir;
-                public fixed byte stringPool[3];
+                public UInt32 TypeAndOffset;
                 public UInt32 DataStartOrParent;
                 public UInt32 SizeOrEndNode;
             }
@@ -55,7 +54,7 @@ namespace gablibela
 
                 public Node(NodeData data)
                 {
-                    this.Type = (NodeType)data.isDir;
+                    this.Type = (NodeType)(data.TypeAndOffset >> 24);
                     if (Type == NodeType.File)
                     {
                         this.DataStart = data.DataStartOrParent;
@@ -183,11 +182,7 @@ namespace gablibela
                 return result.ToArray();
             }
 
-            private unsafe static UInt32 GetStringPoolOffset(NodeData node)
-            {
-                byte* p = node.stringPool;
-                return (UInt32) (*p | *(p + 1) << 8 | *(p + 2) << 16);
-            }
+            private static UInt32 GetStringPoolOffset(NodeData node) => node.TypeAndOffset & 0x00FFFFFF;
         }
     }
 }

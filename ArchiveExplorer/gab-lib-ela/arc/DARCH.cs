@@ -30,9 +30,7 @@ namespace gablibela
             public unsafe struct NodeData
             {
                 public byte isDir;
-                public byte stringPool1;
-                public byte stringPool2;
-                public byte stringPool3;
+                public fixed byte stringPool[3];
                 public UInt32 DataStartOrParent;
                 public UInt32 SizeOrEndNode;
             }
@@ -192,10 +190,10 @@ namespace gablibela
                 return result.ToArray();
             }
 
-            private static UInt32 GetStringPoolOffset(NodeData stringPoolBytes)
+            private unsafe static UInt32 GetStringPoolOffset(NodeData node)
             {
-                byte[] convPool = new byte[] { stringPoolBytes.stringPool3, stringPoolBytes.stringPool2, stringPoolBytes.stringPool1, 0x00, };
-                return BitConverter.ToUInt32(convPool);
+                byte* p = node.stringPool;
+                return (UInt32) (*p | *(p + 1) << 8 | *(p + 2) << 16);
             }
         }
     }

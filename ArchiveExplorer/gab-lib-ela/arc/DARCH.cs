@@ -37,7 +37,14 @@ namespace gablibela
 
             public class Node
             {
-                public bool IsDir;
+                public enum NodeType
+                {
+                    File = 0,
+                    Directory = 1,
+                    OptionCount,
+                }
+
+                public NodeType Type;
                 public int Index;
                 public UInt32 StringPoolOffset;
                 public string Name;
@@ -54,8 +61,7 @@ namespace gablibela
 
                 public Node(NodeData data)
                 {
-                    this.IsDir = data.isDir > 0;
-                    if (!IsDir)
+                    this.Type = (NodeType)data.isDir;
                     {
                         this.DataStart = data.DataStartOrParent;
                         this.DataSize = data.SizeOrEndNode;
@@ -110,10 +116,8 @@ namespace gablibela
                     node.Index = i + 1;
                     _nodeData.Add(nodeRawData);
                     _nodes.Add(node);
-                    if(!node.IsDir)
+                    if(node.Type == Node.NodeType.File)
                         node.Data = reader.ReadBytes((int)nodeRawData.SizeOrEndNode, nodeRawData.DataStartOrParent);
-
-
                 }
                 rawNodeData = _nodeData.ToArray();
                 rawNodes = _nodes.ToArray();
@@ -142,9 +146,9 @@ namespace gablibela
                         testNode = testNode.Parent;
                     }
                     names.Append(node.Name);
-                    string sizeorsmth = node.IsDir ? "-----" : node.DataSize.ToString();
+                    string sizeorsmth = node.Type == Node.NodeType.Directory ? "-----" : node.DataSize.ToString();
                     string magic = ".DIR";
-                    if(!node.IsDir) magic = Encoding.UTF8.GetString(node.Data.Take(4).ToArray());
+                    if(node.Type == Node.NodeType.File) magic = Encoding.UTF8.GetString(node.Data.Take(4).ToArray());
                     magic = magic.Replace('\0', '.');
                     Console.WriteLine($"{sizeorsmth.PadLeft(10)}  {magic.PadLeft(4)}  {string.Join("\\", names.ToArray())}");
                 }
@@ -157,7 +161,7 @@ namespace gablibela
 
                 foreach(Node node in nodes) 
                 {
-                    if (node.IsDir)
+                    if (node.Type == Node.NodeType.Directory)
                     {
                         if (parentQueue.Count != 0)
                         {

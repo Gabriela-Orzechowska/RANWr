@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using gablibela.io;
-using static gablibela.arc.DARCH;
 
 namespace gablibela
 {
@@ -62,6 +56,7 @@ namespace gablibela
                 public Node(NodeData data)
                 {
                     this.Type = (NodeType)data.isDir;
+                    if (Type == NodeType.File)
                     {
                         this.DataStart = data.DataStartOrParent;
                         this.DataSize = data.SizeOrEndNode;
@@ -81,10 +76,9 @@ namespace gablibela
             public NodeData[] rawNodeData;
             public Node[] rawNodes;
             public Node[] structure;
-
             public byte[] data;
 
-            public DARCH(byte[] data) => new DARCH(data, "<null>.szs");
+            public DARCH(byte[] data) : this(data, "<null>.szs") { }
 
             public DARCH(byte[] _data, string fileName)
             {
@@ -164,14 +158,12 @@ namespace gablibela
                     if (node.Type == Node.NodeType.Directory)
                     {
                         if (parentQueue.Count != 0)
-                        {
-                            
+                        {     
                             parentQueue.Last().Children.Add(node);
                             node.Parent = parentQueue.Last();
                         }
                         else result.Add(node);
-                        parentQueue.Add(node);
-                        
+                        parentQueue.Add(node);                
                     }
                     else
                     {
@@ -183,11 +175,8 @@ namespace gablibela
                     {
                         Node[] apply = parentQueue.FindAll(f => f.EndNode == node.Index + 1).ToArray();
                         apply.Reverse();
-                        foreach (Node applyNode in apply)
-                        {
-                            
+                        foreach (Node applyNode in apply) 
                             parentQueue.Remove(applyNode);
-                        }
                     }
                 }
 

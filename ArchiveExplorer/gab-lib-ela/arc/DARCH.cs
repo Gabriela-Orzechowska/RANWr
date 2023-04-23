@@ -67,14 +67,22 @@ namespace gablibela
                     }
                     Children = new List<Node>();
                 }
+                public Node(string name, byte[] data, NodeType type)
+                {
+                    Name = name;
+                    Data = data;
+                    Type = type;
+                    DataSize = (uint)data.Length;
+                    Children = new();
+                }
             }
 
             public Header header;
             public string name;
 
             public NodeData[] rawNodeData;
-            public Node[] rawNodes;
-            public Node[] structure;
+            public List<Node> rawNodes;
+            public Node structure;
             public byte[] data;
 
             public DARCH(byte[] data) : this(data, "<null>.szs") { }
@@ -113,9 +121,9 @@ namespace gablibela
                         node.Data = reader.ReadBytes((int)nodeRawData.SizeOrEndNode, nodeRawData.DataStartOrParent);
                 }
                 rawNodeData = _nodeData.ToArray();
-                rawNodes = _nodes.ToArray();
+                rawNodes = _nodes;
 
-                structure = ConvertToStructure(rawNodes);
+                structure = ConvertToStructure(rawNodes.ToArray());
             }
 
             public void PrintArchive()
@@ -147,7 +155,7 @@ namespace gablibela
                 }
             }
 
-            private static Node[] ConvertToStructure(Node[] nodes)
+            private static Node ConvertToStructure(Node[] nodes)
             {
                 List<Node> result = new();
                 List<Node> parentQueue = new();
@@ -179,10 +187,48 @@ namespace gablibela
                     }
                 }
 
-                return result.ToArray();
+                return result.ToArray()[0];
             }
 
             private static UInt32 GetStringPoolOffset(NodeData node) => node.TypeAndOffset & 0x00FFFFFF;
+
+            public void RecalculateStructureIndexes()
+            {
+                int start = 1;
+                RecalculateNodeIndexes(ref start, structure.Children.ToArray());
+                RecalculateDirectoryLastNode(rawNodes.ToArray());
+            }
+
+            private static void RecalculateNodeIndexes(ref int start, Node[] nodes)
+            {
+                foreach(var node in nodes)
+                {
+                    node.Index = start;
+                    start++;
+                    if(node.Children.Count > 0)
+                    {
+                        RecalculateNodeIndexes(ref start, node.Children.ToArray()) ;
+                    }
+                }
+            }
+
+            private static void RecalculateDirectoryLastNode(Node[] nodes)
+            {
+                foreach(var node in nodes)
+                {
+                    if (node.Type == Node.NodeType.Directory) node.EndNode = (uint)GetTheLastOfUs(node).Index+1;
+                }
+            }
+
+            private static Node GetTheLastOfUs(Node node)
+            {
+                if (node.Children.Count > 0)
+                {
+                    var _new = GetTheLastOfUs(node.Children.Last());
+                    return _new;
+                }
+                else return node;
+            }
         }
     }
 }

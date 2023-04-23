@@ -51,15 +51,14 @@ namespace gablibela
                 return data.ToArray();
             }
 
-            public static byte[] Compress(byte[] source) => Compress(source, DefaultCompressionLevel);
-
-            public static byte[] Compress(byte[] source, byte compressionLevel)
+            public static byte[] Compress(byte[] source)
             {
                 List<byte> data = new List<byte>();
+
                 data.AddRange(Encoding.ASCII.GetBytes(Signature));
                 data.AddRange(BitConverter.GetBytes(source.Length).Reverse());
                 data.AddRange(new byte[8]);
-                data.AddRange(Encode(source, compressionLevel));
+                data.AddRange(Encode(source));
 
                 return data.ToArray();
             }
@@ -69,18 +68,11 @@ namespace gablibela
             // Yoinked from https://github.com/MichaelHinrichs/Switch-Toolbox/blob/master/Switch_Toolbox_Library/Compression/Formats/Yaz0.cs
             // All credits here
             //
-
-            public static byte[] Encode(byte[] source) => Encode(source, DefaultCompressionLevel);
-
-            public static byte[] Encode(byte[] source, byte compressionLevel)
+            public static byte[] Encode(byte[] source)
             {
                 UInt32 sourceLenght = (UInt32)source.Length;
 
-                UInt32 range = 0x1000; ;
-                if (compressionLevel == 0)
-                    range = 0;
-                else if (compressionLevel < 9)
-                    range = (UInt32)(0x10e0 * compressionLevel / 9 - 0x0e0);
+                UInt32 range = 0x1000;
 
                 UInt32 position = 0;
                 UInt32 sourceEnd = (UInt32)source.Length;
@@ -128,10 +120,8 @@ namespace gablibela
                                 destination[destinationPosition] = (byte)(diff & 0xFF); destinationPosition++;
                                 destination[destinationPosition] = (byte)((numBytes - 0x12) & 0xFF); destinationPosition++;
                             }
-
                             position += (UInt32)numBytes;
                         }
-
                         else
                         {
                             destination[codeBytePosition] |= (byte)(1 << (7 - i));
@@ -193,7 +183,6 @@ namespace gablibela
                 }
                 return ((found << 32) | numBytes);
             }
-
         }
     }
 }

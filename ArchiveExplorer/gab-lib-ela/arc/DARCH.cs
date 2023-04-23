@@ -229,6 +229,26 @@ namespace gablibela
                 }
                 else return node;
             }
+
+            public Node GetNodeByName(string name)
+            {
+                Node returnNode = rawNodes.FirstOrDefault(n => n.Name == name);
+                return returnNode;
+            }
+
+            public void AddNode(string name, Node.NodeType type, byte[] data, string parentName) => AddNode(name,type,data,GetNodeByName(parentName));
+
+            public void AddNode(string name, Node.NodeType type, byte[] data, Node parent)
+            {
+                if (parent.Type != Node.NodeType.Directory) throw new Exception("Parent Node can't be a file");
+                Node node = new(name,data,type);
+                node.Parent = parent;
+                parent.Children.Add(node);
+                rawNodes.Add(node);
+
+                RecalculateStructureIndexes();
+            }
+
         }
     }
 }

@@ -21,7 +21,6 @@ Command-based Tool for managing Wii archives
 | Format | Can Open | Can Save |
 |--------|----------|----------|
 | DARCH (U8) | Can Read | No     |
-| ARC | Can Read | No |
 
 
 ## Credits

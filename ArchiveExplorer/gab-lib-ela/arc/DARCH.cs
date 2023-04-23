@@ -199,7 +199,7 @@ namespace gablibela
                 RecalculateDirectoryLastNode(rawNodes.ToArray());
             }
 
-            private static void RecalculateNodeIndexes(ref int start, Node[] nodes)
+            private void RecalculateNodeIndexes(ref int start, Node[] nodes)
             {
                 foreach(var node in nodes)
                 {
@@ -207,9 +207,11 @@ namespace gablibela
                     start++;
                     if(node.Children.Count > 0)
                     {
+                        node.Children = node.Children.OrderBy(x => x.Name).OrderBy(x=>x.Type).ToList();
                         RecalculateNodeIndexes(ref start, node.Children.ToArray()) ;
                     }
                 }
+                rawNodes = rawNodes.OrderBy(n => n.Index).ToList();
             }
 
             private static void RecalculateDirectoryLastNode(Node[] nodes)
@@ -245,7 +247,24 @@ namespace gablibela
                 node.Parent = parent;
                 parent.Children.Add(node);
                 rawNodes.Add(node);
+                RecalculateStructureIndexes();
+            }
 
+            public void RemoveNode(string path)
+            {
+                string[] nodeNames = path.Split("/");
+                Node node = structure;
+                foreach(var name in nodeNames)
+                {
+                    if(node.Children.Find(x => x.Name == name) != null) node = node.Children.First(x => x.Name == name);
+                }
+                RemoveNode(node);
+            }
+
+            public void RemoveNode(Node node)
+            {
+                if(node.Parent != null) node.Parent.Children.Remove(node);
+                rawNodes.Remove(node);
                 RecalculateStructureIndexes();
             }
 

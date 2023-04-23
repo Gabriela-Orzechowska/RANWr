@@ -238,7 +238,16 @@ namespace gablibela
                 return returnNode;
             }
 
-            public void AddNode(string name, Node.NodeType type, byte[] data, string parentName) => AddNode(name,type,data,GetNodeByName(parentName));
+            public void AddNode(string name, Node.NodeType type, byte[] data, string path)
+            {
+                string[] nodeNames = path.Split("/");
+                Node node = structure;
+                foreach (var _name in nodeNames)
+                {
+                    if (node.Children.Find(x => x.Name == _name) != null) node = node.Children.First(x => x.Name == _name);
+                }
+                AddNode(name, type, data, node);
+            }
 
             public void AddNode(string name, Node.NodeType type, byte[] data, Node parent)
             {

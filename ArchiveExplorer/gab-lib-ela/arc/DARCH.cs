@@ -376,6 +376,94 @@ namespace gablibela
                 return tempDirectory;
             }
 
+            public string ComputeStringPool(out List<int> offsets)
+            {
+                offsets = new();
+                int i = 0;
+                string output = "";
+
+                foreach(var node in rawNodes)
+                {
+                    var nodeName = node.Name + '\0';
+                    output += nodeName;
+                    offsets.Add(i);
+                    i += nodeName.Length;
+                }
+                return output;
+            }
+
+            public void FreeArchive()
+            {
+                data = Array.Empty<byte>();
+                Directory.Delete(TemporaryPath, true);
+            }
+
+            public byte[] Encode()
+            {
+                MemoryStream stream= new MemoryStream();
+                BetterBinaryWriter writer = new BetterBinaryWriter(stream);
+
+                List<int> stringPoolOffsets = new();
+                string stringPool = ComputeStringPool(out stringPoolOffsets);
+
+                File.WriteAllBytes(@"C:\Users\Gabi\Pictures\RANWr\stringpool.bin", Encoding.ASCII.GetBytes(stringPool));
+
+                UInt32 fstLenght = (UInt32) (rawNodes.Count * 0xC + stringPool.Length);
+                UInt32 dataOffset = roundTo32(fstLenght + 0x20);
+
+                //Header
+                writer.Write(0x55AA382D);
+                writer.Write((Int32)0x20);
+                writer.Write(fstLenght);
+                writer.Write(dataOffset);
+                writer.Write(new byte[16]);
+
+                int i = 0;
+                uint currentDataOffset = dataOffset;
+                List<uint> fileOffsets = new List<uint> { currentDataOffset };
+                //Nodes
+                foreach (var node in rawNodes)
+                {
+                    writer.Write(((byte)node.Type << 24) + stringPoolOffsets[i]); i++;
+                    if(node.Type == Node.NodeType.File)
+                    {
+                        writer.Write(currentDataOffset);
+                        currentDataOffset += roundTo32((uint)node.DataSize);
+                        fileOffsets.Add(currentDataOffset);
+                        writer.Write(node.DataSize);
+                    }
+                    else
+                    {
+                        int index = 0;
+                        if (node.Parent != null) index = node.Parent.Index;
+                        writer.Write(index);
+                        writer.Write(node.EndNode);
+                    }
+                    
+                }
+
+                writer.Write(stringPool);
+                writer.Seek(0x00);
+                i = 0;
+                foreach(var node in rawNodes)
+                {
+                    if(node.Type == Node.NodeType.File)
+                    {
+                        writer.Write(node.Data, fileOffsets[i]); i++;
+                    }
+                }
+
+                //Cleanup
+                long FileLenght = writer.Length();
+                int finishUp = (int)(roundTo32((uint)FileLenght) - FileLenght);
+                writer.Write(new byte[finishUp], (ulong)FileLenght);
+
+
+                return stream.ToArray();
+            }
+
+            private static UInt32 roundTo32(UInt32 x) => (UInt32)Math.Ceiling((float)x / 0x20) * 0x20;
+
         }
     }
 }

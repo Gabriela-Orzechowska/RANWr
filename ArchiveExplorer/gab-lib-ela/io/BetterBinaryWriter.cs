@@ -137,6 +137,9 @@ namespace gablibela
             public long Length() => _stream.Length;
 
             public long Position() => _stream.Position;
+
+            public void Seek(long offset) => _stream.Position= offset;
+
         }
     }
 }

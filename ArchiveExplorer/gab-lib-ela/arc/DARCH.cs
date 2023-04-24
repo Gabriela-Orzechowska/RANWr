@@ -24,8 +24,8 @@ namespace gablibela
             public struct NodeData
             {
                 public UInt32 TypeAndOffset;
-                public UInt32 DataStartOrParent;
-                public UInt32 SizeOrEndNode;
+                public Int32 DataStartOrParent;
+                public Int32 SizeOrEndNode;
             }
 
             public class Node
@@ -41,11 +41,11 @@ namespace gablibela
                 public int Index;
                 public UInt32 StringPoolOffset;
                 public string Name;
-                public UInt32 DataStart;
-                public UInt32 DataSize;
+                public Int32 DataStart;
+                public Int32 DataSize;
 
-                public UInt32 ParentIndex;
-                public UInt32 EndNode;
+                public Int32 ParentIndex;
+                public Int32 EndNode;
 
                 public List<Node> Children;
                 public Node? Parent;
@@ -72,7 +72,7 @@ namespace gablibela
                     Name = name;
                     Data = data;
                     Type = type;
-                    DataSize = (uint)data.Length;
+                    DataSize = data.Length;
                     Children = new();
                 }
             }
@@ -101,9 +101,9 @@ namespace gablibela
                 NodeData rootNodeData = reader.ReadStruct<NodeData>(header.NodeStart);
                 Node rootNode = new Node(rootNodeData);
 
-                UInt32 nodeCount = rootNodeData.SizeOrEndNode - 1;
+                Int32 nodeCount = rootNodeData.SizeOrEndNode - 1;
 
-                UInt32 stringTableOffset = header.NodeStart + rootNodeData.SizeOrEndNode * 0xC;
+                Int64 stringTableOffset = header.NodeStart + rootNodeData.SizeOrEndNode * 0xC;
                 rootNode.Name = reader.ReadStringNT(stringTableOffset + GetStringPoolOffset(rootNodeData));
 
                 _nodeData.Add(rootNodeData);
@@ -190,7 +190,7 @@ namespace gablibela
                 return result.ToArray()[0];
             }
 
-            private static UInt32 GetStringPoolOffset(NodeData node) => node.TypeAndOffset & 0x00FFFFFF;
+            private static Int32 GetStringPoolOffset(NodeData node) => (Int32) node.TypeAndOffset & 0x00FFFFFF;
 
             public void RecalculateStructureIndexes()
             {
@@ -218,7 +218,7 @@ namespace gablibela
             {
                 foreach(var node in nodes)
                 {
-                    if (node.Type == Node.NodeType.Directory) node.EndNode = (uint)GetTheLastOfUs(node).Index+1;
+                    if (node.Type == Node.NodeType.Directory) node.EndNode = GetTheLastOfUs(node).Index+1;
                 }
             }
 

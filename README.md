@@ -20,7 +20,7 @@ Command-based Tool for managing Wii archives
 #### Supported File Formats
 | Format | Can Open | Can Save |
 |--------|----------|----------|
-| DARCH (U8) | Can Read | No     |
+| DARCH (U8) | Yes | Yes     |
 
 
 ## Credits

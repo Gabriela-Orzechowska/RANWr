@@ -87,7 +87,7 @@ namespace gablibela
             public byte[] data;
             public string TemporaryPath;
 
-            public DARCH(byte[] data) : this(data, "<null>.szs") { }
+            public DARCH(byte[] data) : this(data, "untitled.arc") { }
 
             public DARCH(byte[] _data, string fileName)
             {
@@ -126,6 +126,17 @@ namespace gablibela
                 rawNodes = _nodes;
 
                 structure = ConvertToStructure(rawNodes.ToArray());
+                RecalculateStructureIndexes();
+                TemporaryPath = GetTemporaryDirectory();
+            }
+
+            public DARCH()
+            {
+                rawNodeData = new NodeData[0];
+                Node struc = new("", new byte[0], Node.NodeType.Directory);
+                struc.Name = "";
+                rawNodes = new() { struc };
+                structure = struc;
                 TemporaryPath = GetTemporaryDirectory();
             }
 
@@ -182,7 +193,12 @@ namespace gablibela
                             parentQueue.Remove(applyNode);
                     }
                 }
-
+                if (result[0].Children.Count > 0)
+                {
+                    if (result[0].Children[0].Name == "." && result[0].Children[0].Type == Node.NodeType.Directory) result = result[0].Children;
+                }
+                result[0].Name = "";
+                result[0].Parent = null;
                 return result.ToArray()[0];
             }
 
@@ -192,22 +208,25 @@ namespace gablibela
             {
                 int start = 1;
                 RecalculateNodeIndexes(ref start, structure.Children.ToArray());
+                structure.Children = structure.Children.OrderBy(f => f.Index).ToList();
                 RecalculateDirectoryLastNode(rawNodes.ToArray());
             }
 
             private void RecalculateNodeIndexes(ref int start, Node[] nodes)
             {
-                nodes = nodes.OrderBy(x => x.Type).ToArray();
+                nodes = nodes.OrderBy(x => x.Name, StringComparer.Ordinal).ThenBy(x => x.Type).ToArray();
                 foreach(var node in nodes)
                 {
                     node.Index = start;
                     start++;
                     if(node.Children.Count > 0)
                     {
-                        node.Children = node.Children.OrderBy(x => x.Name).OrderBy(x=>x.Type).ToList();
-                        RecalculateNodeIndexes(ref start, node.Children.ToArray()) ;
+                        node.Children = node.Children.OrderBy(x => x.Name, StringComparer.Ordinal).ThenBy(x => x.Type).ToList();
+                        RecalculateNodeIndexes(ref start, node.Children.ToArray());
+                        node.Children = node.Children.OrderBy(n => n.Index).ToList();
                     }
                 }
+                
                 rawNodes = rawNodes.OrderBy(n => n.Index).ToList();
             }
 
@@ -248,25 +267,25 @@ namespace gablibela
                     try
                     {
                         node = GetNodeByPath(relative);
-                        if(node.Type == Node.NodeType.File) UpdateNodeData(node);
-                    }
+                        if (node == structure || node == null) throw new Exception();
+                        if (relative != GetNodePath(node)) throw new Exception();
+                        UpdateNodeData(node);
+                    } 
                     catch(Exception e)
                     {
-                        if (node.Name == "")
-                        {
-                            FileAttributes attr = File.GetAttributes(fullPath);
-                            Node.NodeType type = attr.HasFlag(FileAttributes.Directory) ? Node.NodeType.Directory : Node.NodeType.File;
-                            string name = Path.GetFileName(file);
-                            byte[] data = new byte[0];
-                            if (type == Node.NodeType.File) data = File.ReadAllBytes(fullPath);
-                            AddNode(name, type, data, Path.GetDirectoryName(relative));
-                        }
+                        FileAttributes attr = File.GetAttributes(fullPath);
+                        Node.NodeType type = attr.HasFlag(FileAttributes.Directory) ? Node.NodeType.Directory : Node.NodeType.File;
+                        string name = Path.GetFileName(file);
+                        byte[] data = new byte[0];
+                        if (type == Node.NodeType.File) data = File.ReadAllBytes(fullPath);
+                        AddNode(name, type, data, Path.GetDirectoryName(relative));
                     }
                 }
                 RecalculateStructureIndexes();
             }
             public Node GetNodeByPath(string path)
             {
+                path = path.Replace("\\", "/");
                 string[] nodeNames = path.Split("/");
                 Node node = structure;
                 foreach (var _name in nodeNames)
@@ -280,8 +299,14 @@ namespace gablibela
             public void UpdateNodeData(Node node)
             {
                 string nodePath = GetNodePath(node);
-                string exportPath = Path.Combine(TemporaryPath, nodePath);
-                node.Data = File.ReadAllBytes(exportPath);
+                string exportPath = PathCombine(TemporaryPath, nodePath);
+                if (!Path.Exists(exportPath)) throw new Exception();
+                if(node == null) throw new Exception();
+                if (node.Type == Node.NodeType.File)
+                {
+                    node.Data = File.ReadAllBytes(exportPath);
+                    node.DataSize = node.Data.Length;
+                }
             }
 
             public void AddNode(string name, Node.NodeType type, string path) => AddNode(name, type, Array.Empty<byte>(), path);
@@ -294,7 +319,7 @@ namespace gablibela
 
             public void AddNode(string name, Node.NodeType type, Node parent) => AddNode(name, type, Array.Empty<byte>(), parent);
 
-            public void AddNode(string name, Node.NodeType type, byte[] data, Node parent)
+            public Node AddNode(string name, Node.NodeType type, byte[] data, Node parent)
             {
                 if (parent.Type != Node.NodeType.Directory) throw new Exception("Parent Node can't be a file");
                 Node node = new(name,data,type);
@@ -302,6 +327,51 @@ namespace gablibela
                 parent.Children.Add(node);
                 rawNodes.Add(node);
                 RecalculateStructureIndexes();
+                return node;
+            }
+
+            public bool CheckIfNodeIsExported(Node node)
+            {
+                string nodePath = GetNodePath(node);
+                string exportPath = PathCombine(TemporaryPath, nodePath);
+                return Path.Exists(exportPath);
+            }
+
+            public string RenameNode(Node node, string newName)
+            {
+                string nodePath = GetNodePath(node);
+                string exportPath = PathCombine(TemporaryPath, nodePath);
+                string newPath = Path.Combine(Path.GetDirectoryName(exportPath), newName);
+
+                if (Path.GetExtension(newName) == "")
+                {
+                    newName += Path.GetExtension(nodePath);
+                    newPath += Path.GetExtension(nodePath);
+                }
+
+                if (Path.Exists(newPath))
+                {
+                    string originalNewPath = newPath;
+                    newPath = PathCombine(Path.GetDirectoryName(newPath), Path.GetFileNameWithoutExtension(newPath));
+                    newPath += " (1)";
+                    newPath += Path.GetExtension(originalNewPath);
+
+                    string originalNewName = newName;
+                    newName = Path.GetFileNameWithoutExtension(newName);
+                    newName += " (1)";
+                    newName += Path.GetExtension(originalNewName);
+                }
+
+
+                if (CheckIfNodeIsExported(node))
+                {
+                    if(node.Type == Node.NodeType.File) File.Move(exportPath, newPath);
+                    else Directory.Move(exportPath, newPath);
+                }
+                node.Name = newName;
+                RecalculateStructureIndexes();
+                Node str = structure;
+                return newName;
             }
 
             public void RemoveNode(string path)
@@ -326,6 +396,11 @@ namespace gablibela
             {
                 List<string> names = new List<string>();
                 Node testNode = node;
+                if(testNode == null)
+                {
+                    names.Insert(0,"");
+                    return string.Join("\\", names.ToArray());
+                }
                 while (testNode.Parent != null)
                 {
                     names.Insert(0, testNode.Name);
@@ -335,30 +410,44 @@ namespace gablibela
                 return string.Join("\\", names.ToArray());
             }
 
-            public void ExportAndOpenNode(Node node)
+            public void OpenNode(Node node)
             {
                 string nodePath = GetNodePath(node);
-                string exportPath = Path.Combine(TemporaryPath, nodePath);
-                ExportNode(node);
-
+                string exportPath = PathCombine(TemporaryPath, nodePath);
                 var p = new Process();
                 p.StartInfo = new ProcessStartInfo(exportPath)
                 {
                     UseShellExecute = true
                 };
                 p.Start();
+            }
 
+            public void ExportAndOpenNode(Node node)
+            {
+                ExportNode(node);
+                OpenNode(node);
             }
 
             public void ExportNode(Node node)
             {
                 string nodePath = GetNodePath(node);
-                string exportPath = Path.Combine(TemporaryPath, nodePath);
+                string exportPath = PathCombine(TemporaryPath, nodePath);
                 if (node.Type == Node.NodeType.File)
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(exportPath));
                     File.WriteAllBytes(exportPath, node.Data);
                 }
+            }
+
+            private string PathCombine(string path1, string path2)
+            {
+                if (Path.IsPathRooted(path2))
+                {
+                    path2 = path2.TrimStart(Path.DirectorySeparatorChar);
+                    path2 = path2.TrimStart(Path.AltDirectorySeparatorChar);
+                }
+
+                return Path.Combine(path1, path2);
             }
 
             public void ExportAllNodes()
@@ -375,6 +464,8 @@ namespace gablibela
                 Directory.CreateDirectory(tempDirectory);
                 return tempDirectory;
             }
+
+            public void SetFolder(string path) => TemporaryPath = path;
 
             public string ComputeStringPool(out List<int> offsets)
             {

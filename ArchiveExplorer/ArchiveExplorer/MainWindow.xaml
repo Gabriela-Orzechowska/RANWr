@@ -1,12 +1,102 @@
 ﻿<Window x:Class="ArchiveExplorer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ArchiveExplorer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Style="{DynamicResource CustomWindowStyle}"
+        Title="RANWr ArchiveExplorer" Height="600" Width="1000">
     <Grid>
+        <StackPanel Margin="5,0,0,0">
+            <Menu x:Name="TopBar">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_New" Template="{DynamicResource SingleDropDownMenuItem}"
+                              Click="NewFile_Click"/>
+                    <MenuItem Header="_Open" Template="{DynamicResource SingleDropDownMenuItem}"
+                              Click="OpenFile_Click"/>
+                </MenuItem>
+                <MenuItem Header="_Edit"/>
+                <MenuItem Header="_View"/>
+                <MenuItem Header="_Help"/>
+            </Menu>
+            <Menu>
+                <MenuItem Width="25" Height="25" Click="NewFile_Click">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/NewDocument.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Width="25" Height="25" Click="OpenFile_Click">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/FolderOpened.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </Menu>
+        </StackPanel>
+        <Grid Margin="0,45,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" MinWidth="160"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="7*" MinWidth="400"/>
+            </Grid.ColumnDefinitions>
+            <GroupBox Grid.Column="0" VerticalAlignment="Stretch" Header="Folders">
+                <TreeView x:Name="FolderView" MouseLeftButtonUp="FolderView_MouseLeftButtonDown">
+                    <TreeView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="/Icons/FolderOpened.png"/>
+                                <TextBlock Text="{Binding Path=Text}"/>
+                            </StackPanel>
+                            
+                        </DataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </GroupBox>
+            <GroupBox Grid.Column="2" VerticalAlignment="Stretch" x:Name="groupBox" xmlns:local="clr-namespace:ArchiveExplorer">
+                <GroupBox.Header>
+                    <Grid Width="{Binding ActualWidth, ElementName=groupBox}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Menu>
+                            <MenuItem Click="GoBack_Click" Width="25" Height="25">
+                                <MenuItem.Icon>
+                                    <Image Source="/Icons/Backwards.png"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </Menu>
+                        <TextBlock Text="Path" Grid.Column="1" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="2" Margin="0,0,20,0" Height="24" IsReadOnly="True" x:Name="PathBar" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                    </Grid>
+                </GroupBox.Header>
+                <ListView x:Name="FileView" MouseDoubleClick="FileView_MouseDoubleClick"
+                          MouseRightButtonUp="FileView_MouseRightButtonUp">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Height="20" PreviewMouseRightButtonUp="FileItem_MouseEnter">
+                                <Image Source="{Binding Path=Icon}"/>
+                                <TextBox Text="{Binding Path=Text}" Padding="5 0 0 0" Width="250"
+                                         IsReadOnly="True" BorderThickness="0"
+                                         Background="Transparent"
+                                         x:Name="FileTextBox"
+                                         KeyDown="FileTextBox_KeyDown"
+                                         LostFocus="FileTextBox_LostFocus"/>
+                                <TextBlock Text="{Binding Path=Size}" Width="70"/>
+                                <TextBlock Text="{Binding Path=Type}"/>
+                                <StackPanel.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Rename" 
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="RenameItem_Click"/>
+                                    </ContextMenu>
+                                </StackPanel.ContextMenu>
+                            </StackPanel>
+                        </DataTemplate>
 
+                    </ListView.ItemTemplate>
+                </ListView>
+            </GroupBox>
+        </Grid>
     </Grid>
 </Window>

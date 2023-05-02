@@ -64,8 +64,8 @@ namespace gablibela
             }
 
             //
-            // After hours of trying, finished by borrowing parts from  
-            // Yoinked from https://github.com/MichaelHinrichs/Switch-Toolbox/blob/master/Switch_Toolbox_Library/Compression/Formats/Yaz0.cs
+            // After hours of trying, finished by borrowing parts from
+            // https://github.com/MichaelHinrichs/Switch-Toolbox/blob/master/Switch_Toolbox_Library/Compression/Formats/Yaz0.cs
             // All credits here
             //
             public static byte[] Encode(byte[] source)

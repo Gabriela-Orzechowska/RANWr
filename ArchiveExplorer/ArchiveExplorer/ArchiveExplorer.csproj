@@ -6,6 +6,63 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Icons\Backwards.png" />
+    <None Remove="Icons\Close.png" />
+    <None Remove="Icons\CloseLight.png" />
+    <None Remove="Icons\Copy.png" />
+    <None Remove="Icons\CopyLight.png" />
+    <None Remove="Icons\Cut.png" />
+    <None Remove="Icons\CutLight.png" />
+    <None Remove="Icons\ExportData.png" />
+    <None Remove="Icons\FolderOpened.png" />
+    <None Remove="Icons\HelpApplication.png" />
+    <None Remove="Icons\HelpApplicationLight.png" />
+    <None Remove="Icons\NewDocument.png" />
+    <None Remove="Icons\NewDocumentLight.png" />
+    <None Remove="Icons\Paste.png" />
+    <None Remove="Icons\PasteLight.png" />
+    <None Remove="Icons\Save.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <COMReference Include="{d37e2a3e-8545-3a39-9f4f-31827c9124ab}">
+      <WrapperTool>tlbimp</WrapperTool>
+      <VersionMinor>0</VersionMinor>
+      <VersionMajor>2</VersionMajor>
+      <Guid>d37e2a3e-8545-3a39-9f4f-31827c9124ab</Guid>
+    </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PresentationFramework.Aero2" Version="1.0.1" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.0-preview.2.23128.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\gab-lib-ela\gablibela.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Icons\Backwards.png" />
+    <Resource Include="Icons\Close.png" />
+    <Resource Include="Icons\CloseLight.png" />
+    <Resource Include="Icons\Copy.png" />
+    <Resource Include="Icons\CopyLight.png" />
+    <Resource Include="Icons\Cut.png" />
+    <Resource Include="Icons\CutLight.png" />
+    <Resource Include="Icons\ExportData.png" />
+    <Resource Include="Icons\FolderOpened.png" />
+    <Resource Include="Icons\HelpApplication.png" />
+    <Resource Include="Icons\HelpApplicationLight.png" />
+    <Resource Include="Icons\NewDocument.png" />
+    <Resource Include="Icons\NewDocumentLight.png" />
+    <Resource Include="Icons\Paste.png" />
+    <Resource Include="Icons\PasteLight.png" />
+    <Resource Include="Icons\Save.png" />
+  </ItemGroup>
 
 </Project>

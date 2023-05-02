@@ -40,7 +40,7 @@ namespace ranwr
                 {
                     switch (args[0])
                     {
-                        case "c":
+                        case "cmpr":
                         case "compress":
                             compress(args[1]);
                             break;
@@ -50,6 +50,14 @@ namespace ranwr
                             break;
                         case "list":
                             listFiles(args[1]);
+                            break;
+                        case "x":
+                        case "extract":
+                            extract(args[1]);
+                            break;
+                        case "c":
+                        case "create":
+                            create(args[1]);
                             break;
                     }
                     
@@ -75,18 +83,65 @@ namespace ranwr
 
         public static void testing()
         {
+            Console.WriteLine(Title);
+            Console.WriteLine($"> Type 'ranwr-arc -h' for help.\n");
+
+            /*
             byte[] data = File.ReadAllBytes(@"C:\Users\Gabi\Pictures\RANWr\koopa_course.arc");
             DARCH darch = new DARCH(data);
 
-            Console.WriteLine(Title);
-            Console.WriteLine($"> Type 'ranwr-arc -h' for help.\n");
-            darch.PrintArchive();
+            darch.AddNode("test1", DARCH.Node.NodeType.Directory, "");
+            darch.AddNode("test2.txt", DARCH.Node.NodeType.File, new byte[16], "test1");
+            darch.RemoveNode("b_teresa.brres");
+
+            byte[] _exportData = darch.Encode();
+            File.WriteAllBytes(@"C:\Users\Gabi\Pictures\RANWr\export_test.arc", _exportData);
+
+            darch.FreeArchive();
+            */
+            create(@"C:\Users\Gabi\Documents\GitHub\BANW\ArchiveExplorer\ranwr-arc\bin\Debug\net7.0\koopa_course.d");
         }
 
         public static void noCommand()
         {
             Console.WriteLine(Title);
             Console.WriteLine($"> Type 'ranwr-arc -h' for help.");
+        }
+
+        public static void extract(string file, string output = null)
+        {
+            if (!Path.Exists(file))
+            {
+                fileNotFound(file);
+                return;
+            }
+
+            if (output == null) output = Path.GetFileNameWithoutExtension(file) + ".d";
+            Directory.CreateDirectory(output);
+            DARCH darch = GetArchive(file);
+            darch.SetFolder(output);
+            darch.ExportAllNodes();
+
+        }
+
+        public static void create(string file, string output = null)
+        {
+            if (!Path.Exists(file))
+            {
+                fileNotFound(file);
+                return;
+            }
+            if(!File.GetAttributes(file).HasFlag(FileAttributes.Directory))
+            {
+                return;
+            }
+
+            if (output == null) output = Path.GetFileNameWithoutExtension(file) + ".szs";
+            DARCH darch = new();
+            darch.SetFolder(file);
+            darch.UpdateAllNodeData(); ;
+            byte[] data = YAZ0.Compress(darch.Encode());
+            File.WriteAllBytes(output, data);
         }
  
         public static void compress(string file, string output = null)
@@ -98,8 +153,11 @@ namespace ranwr
 
             byte[] original = File.ReadAllBytes(file);
             var signature = BitConverter.ToUInt32(original.Take(4).Reverse().ToArray());
-            if (signature == YAZ0.SignatureHex) return;
-            byte[] compressed = YAZ0.Compress(original, (byte)CompressionLevel);
+            if (signature == YAZ0.SignatureHex)
+            {
+                original = YAZ0.Decode(original);
+            }
+            byte[] compressed = YAZ0.Compress(original);
             
             File.WriteAllBytes(output, compressed);
         }
@@ -117,6 +175,27 @@ namespace ranwr
             byte[] decompressed = YAZ0.Decode(original);
             File.WriteAllBytes(output, decompressed);
         }
+
+        public static void fileNotFound(string path)
+        {
+            Console.WriteLine($"Could not find the file: {path}");
+        }
+
+        public static DARCH GetArchive(string path) => GetArchive(File.ReadAllBytes(path));
+
+        public static DARCH GetArchive(byte[] data)
+        {
+            var signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
+            if (signature == YAZ0.SignatureHex)
+            {
+                data = YAZ0.Decode(data);
+                signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
+            }
+            if (signature != DARCH.Signature) return null;
+
+            return new(data);
+        }
+
     }
     
 }

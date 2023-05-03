@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Style="{DynamicResource CustomWindowStyle}"
-        Title="RANWr ArchiveExplorer" Height="600" Width="1000">
+        Title="RANWr ArchiveExplorer" Height="600" Width="1000"
+        KeyDown="Window_KeyDown">
     <Grid>
         <StackPanel Margin="5,0,0,0">
             <Menu x:Name="TopBar">
@@ -14,20 +15,75 @@
                               Click="NewFile_Click"/>
                     <MenuItem Header="_Open" Template="{DynamicResource SingleDropDownMenuItem}"
                               Click="OpenFile_Click"/>
+                    <MenuItem Header="_Import Files" Template="{DynamicResource SingleDropDownMenuItem}"
+                              Click="ImportFile_Click"/>
+                    <Separator Style="{DynamicResource MenuItemSeparator}"/>
+                    <MenuItem Header="_Quick Save" Template="{DynamicResource SingleDropDownMenuItem}"
+                              Click="QuickSave_Click" x:Name="QuickSaveButton"/>
+                    <MenuItem Header="_Quick Save as..." Template="{DynamicResource SingleDropDownMenuItem}"
+                              Click="QuickSaveAs_Click" x:Name="QuickSaveAsButton"/>
+                    <Separator Style="{DynamicResource MenuItemSeparator}"/>
+                    <MenuItem Header="_Save" Template="{DynamicResource SingleDropDownMenuItem}"
+                              Click="FullSave_Click" x:Name="SaveButton"/>
+                    <MenuItem Header="_Save as..." Template="{DynamicResource SingleDropDownMenuItem}"
+                              Click="FullSaveAs_Click" x:Name="SaveAsButton"/>
+                    <Separator Style="{DynamicResource MenuItemSeparator}"/>
+                    <MenuItem Header="_Exit..." Template="{DynamicResource SingleDropDownMenuItem}"/>
                 </MenuItem>
-                <MenuItem Header="_Edit"/>
-                <MenuItem Header="_View"/>
-                <MenuItem Header="_Help"/>
+                <MenuItem Header="_Edit">
+                    <MenuItem Header="Copy"
+                        Template="{DynamicResource SingleDropDownMenuItem}"
+                        Click="CopyItem_Click"/>
+                    <MenuItem Header="Paste"
+                        Template="{DynamicResource SingleDropDownMenuItem}"
+                        Click="PasteItem_Click"/>
+                    <MenuItem Header="Import"
+                        Template="{DynamicResource SingleDropDownMenuItem}"
+                        Click="ImportFile_Click"/>
+                    <MenuItem Header="Delete" 
+                        Template="{DynamicResource SingleDropDownMenuItem}"
+                        Click="DeleteItem_Click"/>
+                </MenuItem>
+                <MenuItem Header="_Help">
+                    <MenuItem Header="_Github Page" Click="GithubAboutItem_Click" Template="{DynamicResource SingleDropDownMenuItem}"/>
+                    <MenuItem Header="_About..." Click="AboutItem_Click" Template="{DynamicResource SingleDropDownMenuItem}"/>
+                </MenuItem>
             </Menu>
             <Menu>
-                <MenuItem Width="25" Height="25" Click="NewFile_Click">
+                <MenuItem Width="25" Height="25" Click="NewFile_Click" ToolTip="New File">
                     <MenuItem.Icon>
                         <Image Source="/Icons/NewDocument.png" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Width="25" Height="25" Click="OpenFile_Click">
+                <MenuItem Width="25" Height="25" Click="OpenFile_Click" ToolTip="Open File">
                     <MenuItem.Icon>
                         <Image Source="/Icons/FolderOpened.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Width="25" Height="25" Click="QuickSave_Click" ToolTip="Quick Save File">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/Save.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Width="25" Height="25" Click="FullSave_Click" ToolTip="Save File">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/Full Save.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator Style="{DynamicResource VerticalSeparator}"/>
+                <MenuItem Width="25" Height="25" Click="CopyItem_Click" ToolTip="Copy">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/Copy.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Width="25" Height="25" Click="PasteItem_Click" ToolTip="Paste">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/Paste.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Width="25" Height="25" Click="DeleteItem_Click" ToolTip="Delete file">
+                    <MenuItem.Icon>
+                        <Image Source="/Icons/Trash.png" />
                     </MenuItem.Icon>
                 </MenuItem>
             </Menu>
@@ -71,7 +127,7 @@
                     </Grid>
                 </GroupBox.Header>
                 <ListView x:Name="FileView" MouseDoubleClick="FileView_MouseDoubleClick"
-                          MouseRightButtonUp="FileView_MouseRightButtonUp">
+                          MouseRightButtonUp="FileView_MouseRightButtonUp" ContextMenuOpening="FileView_ContextMenuOpening">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" Height="20" PreviewMouseRightButtonUp="FileItem_MouseEnter">
@@ -102,6 +158,15 @@
                                         <MenuItem Header="Rename" 
                                                   Template="{DynamicResource SingleDropDownMenuItem}"
                                                   Click="RenameItem_Click"/>
+                                        <MenuItem Header="Copy"
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="CopyItem_Click"/>
+                                        <MenuItem Header="Paste"
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="PasteItem_Click"/>
+                                        <MenuItem Header="Import"
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="ImportFile_Click"/>
                                         <MenuItem Header="Delete" 
                                                   Template="{DynamicResource SingleDropDownMenuItem}"
                                                   Click="DeleteItem_Click"/>
@@ -111,8 +176,25 @@
                         </DataTemplate>
 
                     </ListView.ItemTemplate>
+                    <ListView.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Add Folder"
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="CreateFolderMenuItem_Click"/>
+                            <MenuItem Header="Import" Template="{DynamicResource SingleDropDownMenuItem}"
+                              Click="ImportFile_Click"/>
+                            <MenuItem Header="Copy"
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="CopyItem_Click"/>
+                            <MenuItem Header="Paste"
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="PasteItem_Click"/>
+                        </ContextMenu>
+                    </ListView.ContextMenu>
                 </ListView>
             </GroupBox>
+            <GridSplitter Grid.Column="1" BorderThickness="1" BorderBrush="#303030"
+                          VerticalAlignment="Stretch" HorizontalAlignment="Center"/>
         </Grid>
     </Grid>
 </Window>

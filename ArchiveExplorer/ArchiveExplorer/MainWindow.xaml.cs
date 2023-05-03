@@ -17,6 +17,8 @@ using System.Windows.Media;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Collections.Specialized;
 
 namespace ArchiveExplorer
 {
@@ -34,27 +36,167 @@ namespace ArchiveExplorer
             {
                 TryOpenFile(args[1]);
             }
+
+
+
         }
 
         public Dictionary<TreeViewItem, DARCH.Node> nodeConnects = new();
         public DARCH currentFile;
         public DARCH.Node currentNode;
+        public string currentFilePath;
 
         public Dictionary<string, string> fileTypes = new Dictionary<string, string>()
         {
-            { ".brres", "Binary Revolution Resource" },
-            { ".kcl", "Mario Kart Wii Collision File" },
-            { ".kmp", "Mario Kart Wii Map Properties" },
+            //Effects
             { ".breft", "Binary Revolution Effect Textures" },
             { ".breff", "Binary Revolution Effect File" },
+
+            //Menu Files
+            { ".bmg", "Binary Message Group" },
+            { ".brctr", "Binary Revolution Control" },
+            { ".brfnt", "Binary Revolution Font" },
+            { ".brlan", "Binary Revolution Layout Animation" },
+            { ".brlyt", "Binary Revolution Layout" },
+
+            { ".thp", "THP Movie file" },
+            { ".tpl", "Texture Palette Library" },
+
+            //Sound
+            { ".brsar", "Binary Revolution Sound Archive" },
+            { ".brwar", "Binary Revolution Wave Archive" },
+            { ".brstm", "Binary Revolution Stream Sound" },
+            { ".brseq", "Binary Revolution Sequence" },
+            { ".brwsd", "Binary Revolution Wave Sound Data" },
             { ".brasd", "Binary Revolution Animation Sound Data" },
+
+            //Resources
+            { ".brres", "Binary Revolution Resource" },
+            //All BRRES Formats ffs
+            { ".brmdl", "Binary Revolution Model Resource" },
+            { ".brtex", "Binary Revolution Texture Resource" },
+            { ".brcha", "Binary Revolution Character Animation Resource" },
+            { ".brcla", "Binary Revolution Color Animation Resource" },
+            { ".brplt", "Binary Revolution Palette Resource" },
+            { ".brsca", "Binary Revolution Scene Animation Resource" },
+            { ".brsha", "Binary Revolution Shape Animation Resource" },
+            { ".brtpa", "Binary Revolution Texture Pattern Animation Resource" },
+            { ".brtsa", "Binary Revolution Texture SRT Animation Resource" },
+            { ".brvia", "Binary Revolution Visibility Animation Resource" },
+
+            //Mario Kart Wii Files
+            { ".kcl", "Mario Kart Wii Collision File" },
+            { ".kmp", "Mario Kart Wii Map Parameters" },
+            { ".krm", "Mario Kart Wii Rumble" },
+            { ".bsp", "Binary Settings and Physics" },
+            { ".btiEnv", "Binary Texture Information" },
+            { ".bti", "Binary Texture Information" },
+            { ".btiMat", "Binary Texture Information" },
+            { ".rkc", "Mario Kart Wii Competition File" },
+            { ".rkg", "Mario Kart Wii Ghost File" },
+            { ".ikp", "Inverse Kinematics Parameters" },
+            { ".bcp", "Binary Camera Parameters" },
+            { ".bmm", "Binary Mii Material" },
+
+            //Mario Kart Wii PostEffects
+            { ".bdof", "Binary Depth of Field" },
+            { ".bblm", "Binary Bloom" },
+            { ".blmap", "Binary Light Map" },
+            { ".bfg", "Binary Fog" },
+            { ".blight", "Binary Lighting" },
         };
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (e.Key == Key.S)
+                    saveFile(2);
+                else if (e.Key == Key.C)
+                    CopyFiles();
+                else if (e.Key == Key.V)
+                    PasteFiles();
+                else if (e.Key == Key.D)
+                    DuplicateFile();
+            }
+            else if(e.Key == Key.Delete)
+            {
+                if(FileView.SelectedItems.Count > 0)
+                {
+                    List<FileListItem> items = new();
+                    foreach(var selItem in FileView.SelectedItems)
+                    {
+                        items.Add(selItem as FileListItem);
+                    }
+                    DeleteFile(items.ToArray());
+                    return;
+                }
+            }
+        }
+
+        private void CopyFiles()
+        {
+            if (FileView.SelectedItems.Count == 0) return;
+            StringCollection paths = new StringCollection();
+            foreach (FileListItem item in FileView.SelectedItems)
+            {
+                DARCH.Node node = item.Node;
+                string nodePath = currentFile.GetNodePath(node);
+                string exportPath = currentFile.PathCombine(currentFile.TemporaryPath, nodePath);
+                paths.Add(exportPath);
+            }
+            Clipboard.SetFileDropList(paths);
+        }
+
+        private void PasteFiles()
+        {
+            if (Clipboard.ContainsFileDropList())
+            {
+                var files = Clipboard.GetFileDropList();
+                foreach (var file in files)
+                {
+                    TryImportFile(file);
+                }
+            }
+        }
+
+        private void DuplicateFile()
+        {
+            FileListItem item = FileView.SelectedItem as FileListItem;
+            if (item == null) return;
+            DARCH.Node node = item.Node;
+            string nodePath = currentFile.GetNodePath(node);
+            string exportPath = currentFile.PathCombine(currentFile.TemporaryPath, nodePath);
+            TryImportFile(exportPath, true);
+        }
+
+        private void FileView_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            if (currentFile == null)
+            {
+                e.Handled = true;
+                FileView.ContextMenu.IsOpen = false;
+            }
+        }
 
         private void NewFile_Click(object sender, RoutedEventArgs e)
         {
+            if (currentFile != null)
+            {
+                MessageBoxResult result = MessageBox.Show("Do you want to save before quitting?", "Warning", MessageBoxButton.YesNoCancel);
+                if (result == MessageBoxResult.Yes)
+                    saveFile();
+                else if (result == MessageBoxResult.Cancel) return;
+                currentFile.FreeArchive();
+            }
+
             DARCH darch = new();
             darch.name = "untitled.arc";
             currentFile = darch;
+            UpdateTreeView();
+            currentNode = currentFile.structure;
+            UpdateListView(currentFile.structure);
+            UpdatePath();
         }
 
         private void OpenFile_Click(object sender, RoutedEventArgs e)
@@ -65,6 +207,77 @@ namespace ArchiveExplorer
             if (result == true)
             {
                 TryOpenFile(dialog.FileName);
+            }
+        }
+
+        private void saveFile(byte level = 10)
+        {
+            if (currentFile == null) return;
+            currentFile.UpdateAllNodeData();
+            byte[] saveData = currentFile.EncodeDARCH();
+            if(Path.GetExtension(currentFilePath) == ".szs") saveData = YAZ0.Compress(saveData, level);
+            File.WriteAllBytes(currentFilePath, saveData);
+        }
+
+        private void QuickSave_Click(object sender, RoutedEventArgs e)
+        {
+            if(currentFilePath != null) saveFile(2);
+            else
+            {
+                QuickSaveAs_Click(sender, e);
+            }
+        }
+
+        private void QuickSaveAs_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new SaveFileDialog();
+            dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo DARCH Archive|*.arc;*.u8";
+            bool? result = dialog.ShowDialog();
+            if (result == true)
+            {
+                currentFilePath = dialog.FileName;
+                saveFile(2);
+                currentFile.name = Path.GetFileName(currentFilePath);
+                UpdateTreeView();
+            }
+        }
+
+        private void FullSave_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentFilePath != null) saveFile();
+            else
+            {
+                FullSaveAs_Click(sender, e);
+            }
+        }
+
+        private void FullSaveAs_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new SaveFileDialog();
+            dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo DARCH Archive|*.arc;*.u8";
+            bool? result = dialog.ShowDialog();
+            if (result == true)
+            {
+                currentFilePath = dialog.FileName;
+                saveFile();
+                currentFile.name = Path.GetFileName(currentFilePath);
+                UpdateTreeView();
+            }
+        }
+
+        private void ImportFile_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog();
+            dialog.Multiselect = true;
+            bool? result = dialog.ShowDialog();
+            if(result == true)
+            {
+                foreach(var file in dialog.FileNames)
+                {
+                    var extension = Path.GetExtension(file);
+                    if (extension == "*.szs" || extension == "*.arc" || extension == "*.u8") continue;
+                    TryImportFile(file);
+                }
             }
         }
 
@@ -198,13 +411,50 @@ namespace ArchiveExplorer
             UpdateTreeView();
         }
 
+        private void CopyItem_Click(object sender, RoutedEventArgs e)
+        {
+            CopyFiles();
+        }
+
+        private void PasteItem_Click(object sender, RoutedEventArgs e)
+        {
+            PasteFiles();
+        }
 
         private void DeleteItem_Click(object sender, RoutedEventArgs e)
         {
-            FileListItem item = ((MenuItem)sender).DataContext as FileListItem;
+            if (FileView.SelectedItems.Count > 0)
+            {
+                List<FileListItem> items = new();
+                foreach (var selItem in FileView.SelectedItems)
+                {
+                    items.Add(selItem as FileListItem);
+                }
+                DeleteFile(items.ToArray());
+                return;
+            }
+        }
+
+        private void DeleteFile(FileListItem[] items = null)
+        {
+            if (items == null) return;
+            string messageBoxText = "Are you sure to delete these files?";
+            if (items.Length == 1) messageBoxText = "Are you sure to delete this file?";
+            MessageBoxResult result = MessageBox.Show(messageBoxText, "Delete file?", MessageBoxButton.YesNo);
+            if (result == MessageBoxResult.Yes)
+            {
+                foreach(var item in items)
+                    currentFile.RemoveNode(item.Node);
+                UpdateListView(currentNode);
+                UpdateTreeView();
+            }
+        }
+
+        private void DeleteFile(FileListItem item = null)
+        {
             if (item == null) return;
             MessageBoxResult result = MessageBox.Show("Are you sure to delete this file?", "Delete file?", MessageBoxButton.YesNo);
-            if(result == MessageBoxResult.Yes)
+            if (result == MessageBoxResult.Yes)
             {
                 currentFile.RemoveNode(item.Node);
                 UpdateListView(currentNode);
@@ -273,8 +523,9 @@ namespace ArchiveExplorer
             UpdateTreeView();
         }
 
-        private void TryImportFile(string filepath)
+        private void TryImportFile(string filepath, bool forceDuplicate = false)
         {
+            if (currentFile == null) return;
             bool isDirectory = File.GetAttributes(filepath).HasFlag(FileAttributes.Directory);
             byte[] data = Array.Empty<byte>();
             string name = Path.GetFileName(filepath);
@@ -290,20 +541,30 @@ namespace ArchiveExplorer
                 if (currentFile == null) return;
                 var curFolderPath = Path.Combine(currentFile.TemporaryPath, currentFile.GetNodePath(currentNode));
                 var folderPath = Path.Combine(curFolderPath, name);
-
+                
 
                 if(Path.Exists(folderPath))
                 {
-                    MessageBoxResult result = MessageBox.Show($"File {Path.GetFileName(folderPath)} already exists, replace it?", "Warning", MessageBoxButton.YesNoCancel);
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        File.Copy(filepath, folderPath, true);
-                    }
-                    else if (result == MessageBoxResult.No)
+                    if (forceDuplicate)
                     {
                         string newName = currentFile.GetFirstNameAvailable(name, currentNode);
                         folderPath = Path.Combine(curFolderPath, newName);
                         File.Copy(filepath, folderPath, true);
+                    }
+                    else
+                    {
+                        MessageBoxResult result = MessageBox.Show($"File {Path.GetFileName(folderPath)} already exists, replace it?", "Warning", MessageBoxButton.YesNoCancel);
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            if (folderPath == filepath) return;
+                            File.Copy(filepath, folderPath, true);
+                        }
+                        else if (result == MessageBoxResult.No)
+                        {
+                            string newName = currentFile.GetFirstNameAvailable(name, currentNode);
+                            folderPath = Path.Combine(curFolderPath, newName);
+                            File.Copy(filepath, folderPath, true);
+                        }
                     }
                 }
                 else
@@ -314,10 +575,27 @@ namespace ArchiveExplorer
                 var curFolderPath = Path.Combine(currentFile.TemporaryPath, currentFile.GetNodePath(currentNode));
                 var folderPath = Path.Combine(curFolderPath, name);
 
-                MessageBoxResult result = MessageBox.Show($"Replace all files?", "Warning", MessageBoxButton.YesNo);
 
+                bool somethingExists = false;
+                if (Path.Exists(folderPath))
+                {
+                    List<string> allfiles = Directory.GetFileSystemEntries(folderPath, "*", SearchOption.AllDirectories).ToList();
+
+                    foreach (string file in allfiles)
+                    {
+                        if (Path.Exists(file)) somethingExists = true; break;
+                    }
+                }
                 Directory.CreateDirectory(folderPath);
-                CopyFilesRecursively(filepath, folderPath, result == MessageBoxResult.Yes);
+                if (somethingExists)
+                {
+                    MessageBoxResult result = MessageBox.Show($"Replace files?", "Warning", MessageBoxButton.YesNo);
+                    CopyFilesRecursively(filepath, folderPath, result == MessageBoxResult.Yes);
+                }
+                else
+                {
+                    CopyFilesRecursively(filepath, folderPath, true);
+                }
                 
             }
             currentFile.UpdateAllNodeData();
@@ -327,8 +605,31 @@ namespace ArchiveExplorer
         
         private void TryOpenFile(string filepath)
         {
+            if(currentFile != null)
+            {
+                MessageBoxResult result = MessageBox.Show("Do you want to save before quitting?", "Warning", MessageBoxButton.YesNoCancel);
+                if (result == MessageBoxResult.Yes)
+                {
+                    if (currentFilePath != null) saveFile();
+                    else
+                    {
+                        var dialog = new SaveFileDialog();
+                        dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo DARCH Archive|*.arc;*.u8";
+                        bool? newResult = dialog.ShowDialog();
+                        if (newResult == true)
+                        {
+                            currentFilePath = dialog.FileName;
+                            saveFile();
+                        }
+                    }
+                }
+                else if (result == MessageBoxResult.Cancel) return;
+                currentFile.FreeArchive();
+            }
+
             DARCH darch = GetArchive(filepath, Path.GetFileName(filepath));
             if (darch == null) return;
+            currentFilePath = filepath;
             currentFile = darch;
             darch.ExportAllNodes();
             UpdateTreeView();
@@ -394,7 +695,10 @@ namespace ArchiveExplorer
                 item.Node = child;
                 item.Text = child.Name;
                 item.Type = "";
-                if(fileTypes.TryGetValue(Path.GetExtension(child.Name), out var newName))
+                var digits = new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+                var extension = Path.GetExtension(child.Name);
+
+                if (fileTypes.TryGetValue(extension.TrimEnd(digits), out var newName))
                 {
                     item.Type = newName;
                 }
@@ -444,6 +748,36 @@ namespace ArchiveExplorer
             return curNodeItem;
         }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (currentFile != null)
+            {
+                MessageBoxResult result = MessageBox.Show("Do you want to save before quitting?", "Warning", MessageBoxButton.YesNoCancel);
+                if (result == MessageBoxResult.Yes)
+                {
+                    if(currentFilePath != null) saveFile();
+                    else
+                    {
+                        var dialog = new SaveFileDialog();
+                        dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo DARCH Archive|*.arc;*.u8";
+                        bool? newResult = dialog.ShowDialog();
+                        if (newResult == true)
+                        {
+                            currentFilePath = dialog.FileName;
+                            saveFile();
+                        }
+                    }
+                }
+                    
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+            base.OnClosing(e);
+        }
+
         protected override void OnClosed(EventArgs e)
         {
             if(currentFile != null) currentFile.FreeArchive();
@@ -462,6 +796,23 @@ namespace ArchiveExplorer
             }
             if (signature != DARCH.Signature) return null;
             return new(data, filename);
+        }
+
+        private void AboutItem_Click(object sender, RoutedEventArgs e)
+        {
+            var uri = "https://www.youtube.com/watch?v=KSPxHniCtmw";
+            var psi = new System.Diagnostics.ProcessStartInfo();
+            psi.UseShellExecute = true;
+            psi.FileName = uri;
+            System.Diagnostics.Process.Start(psi);
+        }
+        private void GithubAboutItem_Click(object sender, RoutedEventArgs e)
+        {
+            var uri = "https://github.com/Gabriela-Orzechowska/RANWr";
+            var psi = new System.Diagnostics.ProcessStartInfo();
+            psi.UseShellExecute = true;
+            psi.FileName = uri;
+            System.Diagnostics.Process.Start(psi);
         }
     }
 

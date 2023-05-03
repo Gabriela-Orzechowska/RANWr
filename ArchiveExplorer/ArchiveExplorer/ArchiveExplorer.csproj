@@ -20,6 +20,7 @@
     <None Remove="Icons\CutLight.png" />
     <None Remove="Icons\ExportData.png" />
     <None Remove="Icons\FolderOpened.png" />
+    <None Remove="Icons\Full Save.png" />
     <None Remove="Icons\HelpApplication.png" />
     <None Remove="Icons\HelpApplicationLight.png" />
     <None Remove="Icons\NewDocument.png" />
@@ -27,6 +28,7 @@
     <None Remove="Icons\Paste.png" />
     <None Remove="Icons\PasteLight.png" />
     <None Remove="Icons\Save.png" />
+    <None Remove="Icons\Trash.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,6 +63,9 @@
     <Resource Include="Icons\CutLight.png" />
     <Resource Include="Icons\ExportData.png" />
     <Resource Include="Icons\FolderOpened.png" />
+    <Resource Include="Icons\Full Save.png">
+      <CopyToOutputDirectory></CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Icons\HelpApplication.png" />
     <Resource Include="Icons\HelpApplicationLight.png" />
     <Resource Include="Icons\NewDocument.png" />
@@ -68,6 +73,7 @@
     <Resource Include="Icons\Paste.png" />
     <Resource Include="Icons\PasteLight.png" />
     <Resource Include="Icons\Save.png" />
+    <Resource Include="Icons\Trash.png" />
   </ItemGroup>
 
 </Project>

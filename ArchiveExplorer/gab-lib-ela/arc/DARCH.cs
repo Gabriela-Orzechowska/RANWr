@@ -408,8 +408,16 @@ namespace gablibela
 
             public void RemoveNode(Node node)
             {
-                if(node.Parent != null) node.Parent.Children.Remove(node);
+                string nodePath = GetNodePath(node);
+                string exportPath = PathCombine(TemporaryPath, nodePath);
+                if (CheckIfNodeIsExported(node))
+                {
+                    if(node.Type == Node.NodeType.File) File.Delete(exportPath);
+                    else Directory.Delete(exportPath,true);
+                }
+                if (node.Parent != null) node.Parent.Children.Remove(node);
                 rawNodes.Remove(node);
+                
                 RecalculateStructureIndexes();
             }
 

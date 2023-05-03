@@ -78,7 +78,9 @@
                                 <Image Source="{Binding Path=Icon}"/>
                                 <TextBox Text="{Binding Path=Text}" Padding="5 0 0 0" Width="250"
                                          IsReadOnly="True" BorderThickness="0"
+                                         Cursor="Arrow" CaretBrush="Transparent"
                                          Background="Transparent"
+                                         Focusable="False"
                                          x:Name="FileTextBox"
                                          KeyDown="FileTextBox_KeyDown"
                                          LostFocus="FileTextBox_LostFocus"/>
@@ -86,9 +88,23 @@
                                 <TextBlock Text="{Binding Path=Type}"/>
                                 <StackPanel.ContextMenu>
                                     <ContextMenu>
+                                        <MenuItem Header="Open" 
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="OpenMenuItem_Click"/>
+                                        <MenuItem Header="Open with..." 
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="OpenWithMenuItem_Click" IsEnabled="{Binding Path=isFile}"/>
+                                        <Separator></Separator>
+                                        <MenuItem Header="Add Folder"
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="CreateFolderMenuItem_Click"/>
+                                        <Separator></Separator>
                                         <MenuItem Header="Rename" 
                                                   Template="{DynamicResource SingleDropDownMenuItem}"
                                                   Click="RenameItem_Click"/>
+                                        <MenuItem Header="Delete" 
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="DeleteItem_Click"/>
                                     </ContextMenu>
                                 </StackPanel.ContextMenu>
                             </StackPanel>

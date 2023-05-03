@@ -28,11 +28,27 @@ namespace ArchiveExplorer
             InitializeComponent();
             this.AllowDrop= true;
             this.Drop += MainWindow_Drop;
+
+            string[] args = Environment.GetCommandLineArgs();
+            if(args.Length > 1)
+            {
+                TryOpenFile(args[1]);
+            }
         }
 
         public Dictionary<TreeViewItem, DARCH.Node> nodeConnects = new();
         public DARCH currentFile;
         public DARCH.Node currentNode;
+
+        public Dictionary<string, string> fileTypes = new Dictionary<string, string>()
+        {
+            { ".brres", "Binary Revolution Resource" },
+            { ".kcl", "Mario Kart Wii Collision File" },
+            { ".kmp", "Mario Kart Wii Map Properties" },
+            { ".breft", "Binary Revolution Effect Textures" },
+            { ".breff", "Binary Revolution Effect File" },
+            { ".brasd", "Binary Revolution Animation Sound Data" },
+        };
 
         private void NewFile_Click(object sender, RoutedEventArgs e)
         {
@@ -92,6 +108,7 @@ namespace ArchiveExplorer
             FileListItem item = ((FrameworkElement)e.OriginalSource).DataContext as FileListItem;
 
             if (item == null) return;
+            if (e.ChangedButton != MouseButton.Left) return;
 
             DARCH.Node node = item.Node;
             if(node.Type == DARCH.Node.NodeType.File)
@@ -105,6 +122,35 @@ namespace ArchiveExplorer
                 UpdateListView(currentNode);
             }
         }
+
+        private void OpenMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            FileListItem item = ((MenuItem)sender).DataContext as FileListItem;
+            if (item == null) return;
+            DARCH.Node node = item.Node;
+            if (node.Type == DARCH.Node.NodeType.File)
+            {
+                currentFile.OpenNode(node);
+            }
+            else
+            {
+                currentNode = node;
+                UpdatePath();
+                UpdateListView(currentNode);
+            }
+        }
+
+        private void OpenWithMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            FileListItem item = ((MenuItem)sender).DataContext as FileListItem;
+            if (item == null) return;
+            DARCH.Node node = item.Node;
+            if (node.Type == DARCH.Node.NodeType.File)
+            {
+                currentFile.OpenWithNode(node);
+            }
+        }
+
 
         StackPanel lastListViewItemPanel = null;
         FileListItem lastItem = null;
@@ -132,12 +178,38 @@ namespace ArchiveExplorer
                     TextBox textBox = (TextBox)child;
                     originalName = textBox.Text;
                     textBox.IsReadOnly = false;
+                    textBox.Focusable = true;
                     textBox.Focus();
+                    textBox.CaretBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 255, 255, 255));
+                    textBox.Cursor = Cursors.IBeam;
                     textBox.BorderThickness = new Thickness(1);
                     textBox.SelectAll();
                 }
             }
 
+        }
+
+        private void CreateFolderMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            string newFolderName = currentFile.GetFirstNameAvailable("New Folder", currentNode);
+            DARCH.Node node = currentFile.AddNode(newFolderName, DARCH.Node.NodeType.Directory, currentNode, true);
+            currentFile.ExportNode(node);
+            UpdateListView(currentNode);
+            UpdateTreeView();
+        }
+
+
+        private void DeleteItem_Click(object sender, RoutedEventArgs e)
+        {
+            FileListItem item = ((MenuItem)sender).DataContext as FileListItem;
+            if (item == null) return;
+            MessageBoxResult result = MessageBox.Show("Are you sure to delete this file?", "Delete file?", MessageBoxButton.YesNo);
+            if(result == MessageBoxResult.Yes)
+            {
+                currentFile.RemoveNode(item.Node);
+                UpdateListView(currentNode);
+            }
+            UpdateTreeView();
         }
 
         private void FileTextBox_KeyDown(object sender, KeyEventArgs e)
@@ -151,6 +223,9 @@ namespace ArchiveExplorer
                     box.BorderThickness = new Thickness(0);
                     if (originalName == box.Text) return;
                     RenameFile(lastItem, box.Text, box);
+                    box.CaretBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0,0,0,0));
+                    box.Cursor = Cursors.Arrow;
+                    box.Focusable = false;
                 }
             }
             else if (e.Key == Key.Escape)
@@ -160,8 +235,12 @@ namespace ArchiveExplorer
                     box.IsReadOnly = true;
                     box.BorderThickness = new Thickness(0);
                     box.Text = originalName;
+                    box.CaretBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0, 0, 0, 0));
+                    box.Cursor = Cursors.Arrow;
+                    box.Focusable = false;
                 }
             }
+            UpdateTreeView();
         }
 
         private void FileTextBox_LostFocus(object sender, RoutedEventArgs e)
@@ -172,20 +251,26 @@ namespace ArchiveExplorer
             {
                 box.IsReadOnly = true;
                 box.BorderThickness = new Thickness(0);
+                box.CaretBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0, 0, 0, 0));
+                box.Cursor = Cursors.Arrow;
+                box.Focusable = false;
                 if (originalName == box.Text) return;
                 RenameFile(lastItem, box.Text, box);
+                
             }
         }
 
         private void RenameFile(FileListItem item, string newName, TextBox box)
         {
-            string newerName = currentFile.RenameNode(item.Node, newName);
+            string newerName = currentFile.GetFirstNameAvailable(newName, currentNode);
+            currentFile.RenameNode(item.Node, newName);
             if(newName != newerName)
             {
                 box.Text = newerName;
             }
             currentFile.RecalculateStructureIndexes();
             UpdateListView(currentNode);
+            UpdateTreeView();
         }
 
         private void TryImportFile(string filepath)
@@ -205,15 +290,34 @@ namespace ArchiveExplorer
                 if (currentFile == null) return;
                 var curFolderPath = Path.Combine(currentFile.TemporaryPath, currentFile.GetNodePath(currentNode));
                 var folderPath = Path.Combine(curFolderPath, name);
-                File.Copy(filepath, folderPath, true);
+
+
+                if(Path.Exists(folderPath))
+                {
+                    MessageBoxResult result = MessageBox.Show($"File {Path.GetFileName(folderPath)} already exists, replace it?", "Warning", MessageBoxButton.YesNoCancel);
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        File.Copy(filepath, folderPath, true);
+                    }
+                    else if (result == MessageBoxResult.No)
+                    {
+                        string newName = currentFile.GetFirstNameAvailable(name, currentNode);
+                        folderPath = Path.Combine(curFolderPath, newName);
+                        File.Copy(filepath, folderPath, true);
+                    }
+                }
+                else
+                    File.Copy(filepath, folderPath, true);
             }
             else
             {
                 var curFolderPath = Path.Combine(currentFile.TemporaryPath, currentFile.GetNodePath(currentNode));
                 var folderPath = Path.Combine(curFolderPath, name);
 
+                MessageBoxResult result = MessageBox.Show($"Replace all files?", "Warning", MessageBoxButton.YesNo);
+
                 Directory.CreateDirectory(folderPath);
-                CopyFilesRecursively(filepath, folderPath);
+                CopyFilesRecursively(filepath, folderPath, result == MessageBoxResult.Yes);
                 
             }
             currentFile.UpdateAllNodeData();
@@ -254,7 +358,7 @@ namespace ArchiveExplorer
             nodeConnects.Add(archiveNode, currentFile.structure);
         }
 
-        private static void CopyFilesRecursively(string sourcePath, string targetPath)
+        private static void CopyFilesRecursively(string sourcePath, string targetPath, bool replace = true)
         {
             //Now Create all of the directories
             foreach (string dirPath in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
@@ -265,7 +369,7 @@ namespace ArchiveExplorer
             //Copy all the files & Replaces any files with the same name
             foreach (string newPath in Directory.GetFiles(sourcePath, "*.*", SearchOption.AllDirectories))
             {
-                File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
+                File.Copy(newPath, newPath.Replace(sourcePath, targetPath), replace);
             }
         }
 
@@ -289,6 +393,13 @@ namespace ArchiveExplorer
                 }
                 item.Node = child;
                 item.Text = child.Name;
+                item.Type = "";
+                if(fileTypes.TryGetValue(Path.GetExtension(child.Name), out var newName))
+                {
+                    item.Type = newName;
+                }
+                item.isDir = child.Type == DARCH.Node.NodeType.Directory;
+                item.isFile = !item.isDir;
                 
                 FileView.Items.Add(item);
             }
@@ -301,6 +412,8 @@ namespace ArchiveExplorer
             public string Size { get; set; }
             public DARCH.Node Node { get; set; }
             public string Type { get; set; }
+            public bool isDir { get; set; }
+            public bool isFile { get; set; }
         }
 
         public static string FormatFileSize(long bytes)

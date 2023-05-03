@@ -51,14 +51,14 @@ namespace gablibela
                 return data.ToArray();
             }
 
-            public static byte[] Compress(byte[] source)
+            public static byte[] Compress(byte[] source, byte level = 10)
             {
                 List<byte> data = new List<byte>();
 
                 data.AddRange(Encoding.ASCII.GetBytes(Signature));
                 data.AddRange(BitConverter.GetBytes(source.Length).Reverse());
                 data.AddRange(new byte[8]);
-                data.AddRange(Encode(source));
+                data.AddRange(Encode(source,level));
 
                 return data.ToArray();
             }
@@ -68,11 +68,15 @@ namespace gablibela
             // https://github.com/MichaelHinrichs/Switch-Toolbox/blob/master/Switch_Toolbox_Library/Compression/Formats/Yaz0.cs
             // All credits here
             //
-            public static byte[] Encode(byte[] source)
+            public static byte[] Encode(byte[] source, byte level = 10)
             {
                 UInt32 sourceLenght = (UInt32)source.Length;
 
                 UInt32 range = 0x1000;
+                if(level < 10)
+                    range = (UInt32)(0x10e0 * level / 9 - 0x0e0);
+                if (level <= 0) 
+                    range = 0;
 
                 UInt32 position = 0;
                 UInt32 sourceEnd = (UInt32)source.Length;

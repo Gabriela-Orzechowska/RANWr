@@ -479,7 +479,7 @@ namespace gablibela
                 }
             }
 
-            private string PathCombine(string path1, string path2)
+            public string PathCombine(string path1, string path2)
             {
                 if (Path.IsPathRooted(path2))
                 {
@@ -529,7 +529,7 @@ namespace gablibela
                 Directory.Delete(TemporaryPath, true);
             }
 
-            public byte[] Encode()
+            public byte[] EncodeDARCH()
             {
                 MemoryStream stream= new MemoryStream();
                 BetterBinaryWriter writer = new BetterBinaryWriter(stream);

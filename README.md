@@ -10,7 +10,7 @@
 | .brasd | Yes      | Yes      |
 | .rasp  | Yes       | No       |
 
-## ArchiveExplorer: In Progress
+## ArchiveExplorer: Alpha
 ### ranwr-arc
 Command-based Tool for managing Wii archives
 #### Compression

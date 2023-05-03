@@ -214,14 +214,14 @@ namespace gablibela
 
             private void RecalculateNodeIndexes(ref int start, Node[] nodes)
             {
-                nodes = nodes.OrderBy(x => x.Name, StringComparer.Ordinal).ThenBy(x => x.Type).ToArray();
+                nodes = nodes.OrderBy(x => x.Name.ToLower(), StringComparer.Ordinal).ThenBy(x => x.Type).ToArray();
                 foreach(var node in nodes)
                 {
                     node.Index = start;
                     start++;
                     if(node.Children.Count > 0)
                     {
-                        node.Children = node.Children.OrderBy(x => x.Name, StringComparer.Ordinal).ThenBy(x => x.Type).ToList();
+                        node.Children = node.Children.OrderBy(x => x.Name.ToLower(), StringComparer.Ordinal).ThenBy(x => x.Type).ToList();
                         RecalculateNodeIndexes(ref start, node.Children.ToArray());
                         node.Children = node.Children.OrderBy(n => n.Index).ToList();
                     }
@@ -309,17 +309,17 @@ namespace gablibela
                 }
             }
 
-            public void AddNode(string name, Node.NodeType type, string path) => AddNode(name, type, Array.Empty<byte>(), path);
+            public Node AddNode(string name, Node.NodeType type, string path, bool export = false) => AddNode(name, type, Array.Empty<byte>(), path, export);
 
-            public void AddNode(string name, Node.NodeType type, byte[] data, string path)
+            public Node AddNode(string name, Node.NodeType type, byte[] data, string path, bool export = false)
             {
                 Node node = GetNodeByPath(path);
-                AddNode(name, type, data, node);
+                return AddNode(name, type, data, node, export);
             }
 
-            public void AddNode(string name, Node.NodeType type, Node parent) => AddNode(name, type, Array.Empty<byte>(), parent);
+            public Node AddNode(string name, Node.NodeType type, Node parent, bool export = false) => AddNode(name, type, Array.Empty<byte>(), parent, export);
 
-            public Node AddNode(string name, Node.NodeType type, byte[] data, Node parent)
+            public Node AddNode(string name, Node.NodeType type, byte[] data, Node parent, bool export = false)
             {
                 if (parent.Type != Node.NodeType.Directory) throw new Exception("Parent Node can't be a file");
                 Node node = new(name,data,type);
@@ -327,7 +327,28 @@ namespace gablibela
                 parent.Children.Add(node);
                 rawNodes.Add(node);
                 RecalculateStructureIndexes();
+                if(export) ExportNode(node);
                 return node;
+            }
+
+            public string GetFirstNameAvailable(string name, Node node)
+            {
+                string newName = Path.GetFileNameWithoutExtension(name) + "{0}" + Path.GetExtension(name);
+                string add = "";
+                string nodePath = GetNodePath(node);
+                string exportPath = PathCombine(TemporaryPath, nodePath);
+                string finalName = string.Format(newName, add);
+                string newPath = Path.Combine(nodePath != "" ? Path.GetDirectoryName(exportPath) : exportPath, finalName);
+                
+                int i = 0;
+                while (Path.Exists(newPath))
+                {
+                    i++;
+                    add = $" ({i})";
+                    finalName = string.Format(newName, add);
+                    newPath = Path.Combine(Path.GetDirectoryName(exportPath), finalName);
+                }
+                return finalName;
             }
 
             public bool CheckIfNodeIsExported(Node node)
@@ -422,6 +443,13 @@ namespace gablibela
                 p.Start();
             }
 
+            public void OpenWithNode(Node node)
+            {
+                string nodePath = GetNodePath(node);
+                string exportPath = PathCombine(TemporaryPath, nodePath);
+                Process.Start("rundll32.exe", string.Format("shell32.dll,OpenAs_RunDLL {0}", exportPath));
+            }
+
             public void ExportAndOpenNode(Node node)
             {
                 ExportNode(node);
@@ -436,6 +464,10 @@ namespace gablibela
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(exportPath));
                     File.WriteAllBytes(exportPath, node.Data);
+                }
+                else
+                {
+                    Directory.CreateDirectory(exportPath);
                 }
             }
 

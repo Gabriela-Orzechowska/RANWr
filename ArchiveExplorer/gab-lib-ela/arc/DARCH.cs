@@ -162,7 +162,7 @@ namespace gablibela
                 }
             }
 
-            private static Node ConvertToStructure(Node[] nodes)
+            private Node ConvertToStructure(Node[] nodes)
             {
                 List<Node> result = new();
                 List<Node> parentQueue = new();
@@ -193,12 +193,17 @@ namespace gablibela
                             parentQueue.Remove(applyNode);
                     }
                 }
-                if (result[0].Children.Count > 0)
+                if (result[0].Children.Count == 1 && result[0].Children[0].Name == ".")
                 {
-                    if (result[0].Children[0].Name == "." && result[0].Children[0].Type == Node.NodeType.Directory) result = result[0].Children;
+                    
+                    rawNodes.Remove(result[0]);
+                    result = result[0].Children;
+                    result[0].Name = string.Empty;
+                    result[0].Index = 0;
+                    result[0].ParentIndex = 0;
+                    result[0].Parent = null;
                 }
-                result[0].Name = "";
-                result[0].Parent = null;
+
                 return result.ToArray()[0];
             }
 
@@ -214,19 +219,18 @@ namespace gablibela
 
             private void RecalculateNodeIndexes(ref int start, Node[] nodes)
             {
-                nodes = nodes.OrderBy(x => x.Name.ToLower(), StringComparer.Ordinal).ThenBy(x => x.Type).ToArray();
+                nodes = nodes.OrderBy(x => x.Name.ToLower(), StringComparer.Ordinal).OrderBy(x => x.Type).ToArray();
                 foreach(var node in nodes)
                 {
                     node.Index = start;
                     start++;
                     if(node.Children.Count > 0)
                     {
-                        node.Children = node.Children.OrderBy(x => x.Name.ToLower(), StringComparer.Ordinal).ThenBy(x => x.Type).ToList();
+                        node.Children = node.Children.OrderBy(x => x.Name.ToLower(), StringComparer.Ordinal).OrderBy(x => x.Type).ToList();
                         RecalculateNodeIndexes(ref start, node.Children.ToArray());
                         node.Children = node.Children.OrderBy(n => n.Index).ToList();
                     }
                 }
-                
                 rawNodes = rawNodes.OrderBy(n => n.Index).ToList();
             }
 
@@ -533,11 +537,8 @@ namespace gablibela
             {
                 MemoryStream stream= new MemoryStream();
                 BetterBinaryWriter writer = new BetterBinaryWriter(stream);
-
                 List<int> stringPoolOffsets = new();
                 string stringPool = ComputeStringPool(out stringPoolOffsets);
-
-                File.WriteAllBytes(@"C:\Users\Gabi\Pictures\RANWr\stringpool.bin", Encoding.ASCII.GetBytes(stringPool));
 
                 UInt32 fstLenght = (UInt32) (rawNodes.Count * 0xC + stringPool.Length);
                 UInt32 dataOffset = roundTo32(fstLenght + 0x20);
@@ -588,7 +589,6 @@ namespace gablibela
                 long FileLenght = writer.Length();
                 int finishUp = (int)(roundTo32((uint)FileLenght) - FileLenght);
                 writer.Write(new byte[finishUp], (ulong)FileLenght);
-
 
                 return stream.ToArray();
             }

@@ -6,19 +6,19 @@
 # Current Tools
 ## AnimSoundMaker: Early Alpha
 #### Supported File Formats
-| Format | Can Open | Can Save |
+| Format | Read | Save |
 |--------|----------|----------|
-| .rasd  | Yes      | Yes      |
 | .brasd | Yes      | Yes      |
+| .rasd  | Yes      | Yes      |
 | .rasp  | Yes       | No       |
 
 ## ArchiveExplorer: Alpha
 #### Supported File Formats
-| Format | Can Open | Can Save |
+| Format | Read | Save |
 |--------|----------|----------|
 | DARCH (U8) | Yes | Yes     |
 #### Compression
-| Format | Can Open | Can Save |
+| Format | Decode | Encode |
 |--------|----------|----------|
 | YAZ0   | Yes      | Yes      |
 

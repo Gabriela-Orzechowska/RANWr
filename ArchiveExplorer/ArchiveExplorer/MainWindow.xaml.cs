@@ -31,14 +31,22 @@ namespace ArchiveExplorer
             this.AllowDrop= true;
             this.Drop += MainWindow_Drop;
 
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.UnhandledException += new UnhandledExceptionEventHandler(ExceptionHandler);
+
             string[] args = Environment.GetCommandLineArgs();
             if(args.Length > 1)
             {
                 TryOpenFile(args[1]);
             }
 
+        }
 
-
+        static void ExceptionHandler(object sender, UnhandledExceptionEventArgs args)
+        {
+            var exception = args.ExceptionObject is Exception ? ((Exception)args.ExceptionObject).Message + ((Exception)args.ExceptionObject).StackTrace : string.Empty;
+            MessageBox.Show("Whoops! Please contact the developers with the following information:\r\n\r\n" + exception,
+                            "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Stop);
         }
 
         public Dictionary<TreeViewItem, DARCH.Node> nodeConnects = new();
@@ -222,6 +230,7 @@ namespace ArchiveExplorer
         private void QuickSave_Click(object sender, RoutedEventArgs e)
         {
             if(currentFilePath != null) saveFile(2);
+            if (currentFile == null) return;
             else
             {
                 QuickSaveAs_Click(sender, e);
@@ -245,6 +254,7 @@ namespace ArchiveExplorer
         private void FullSave_Click(object sender, RoutedEventArgs e)
         {
             if (currentFilePath != null) saveFile();
+            if (currentFile == null) return;
             else
             {
                 FullSaveAs_Click(sender, e);

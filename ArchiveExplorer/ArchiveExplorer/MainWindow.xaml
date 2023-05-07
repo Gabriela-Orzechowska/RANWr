@@ -12,19 +12,19 @@
             <Menu x:Name="TopBar">
                 <MenuItem Header="_File">
                     <MenuItem Header="_New" Template="{DynamicResource SingleDropDownMenuItem}"
-                              Click="NewFile_Click"/>
+                              Click="NewFile_Click" InputGestureText="Ctrl+N"/>
                     <MenuItem Header="_Open" Template="{DynamicResource SingleDropDownMenuItem}"
-                              Click="OpenFile_Click"/>
+                              Click="OpenFile_Click" InputGestureText="Ctrl+O"/>
                     <MenuItem Header="_Import Files" Template="{DynamicResource SingleDropDownMenuItem}"
-                              Click="ImportFile_Click"/>
+                              Click="ImportFile_Click" InputGestureText="Ctrl+I"/>
                     <Separator Style="{DynamicResource MenuItemSeparator}"/>
                     <MenuItem Header="_Quick Save" Template="{DynamicResource SingleDropDownMenuItem}"
-                              Click="QuickSave_Click" x:Name="QuickSaveButton"/>
+                              Click="QuickSave_Click" x:Name="QuickSaveButton" InputGestureText="Ctrl+S"/>
                     <MenuItem Header="_Quick Save as..." Template="{DynamicResource SingleDropDownMenuItem}"
                               Click="QuickSaveAs_Click" x:Name="QuickSaveAsButton"/>
                     <Separator Style="{DynamicResource MenuItemSeparator}"/>
                     <MenuItem Header="_Save" Template="{DynamicResource SingleDropDownMenuItem}"
-                              Click="FullSave_Click" x:Name="SaveButton"/>
+                              Click="FullSave_Click" x:Name="SaveButton" InputGestureText="Ctrl+Shift+S"/>
                     <MenuItem Header="_Save as..." Template="{DynamicResource SingleDropDownMenuItem}"
                               Click="FullSaveAs_Click" x:Name="SaveAsButton"/>
                     <Separator Style="{DynamicResource MenuItemSeparator}"/>
@@ -33,16 +33,16 @@
                 <MenuItem Header="_Edit">
                     <MenuItem Header="Copy"
                         Template="{DynamicResource SingleDropDownMenuItem}"
-                        Click="CopyItem_Click"/>
+                        Click="CopyItem_Click" InputGestureText="Ctrl+C"/>
                     <MenuItem Header="Paste"
                         Template="{DynamicResource SingleDropDownMenuItem}"
-                        Click="PasteItem_Click"/>
+                        Click="PasteItem_Click" InputGestureText="Ctrl+V"/>
                     <MenuItem Header="Import"
                         Template="{DynamicResource SingleDropDownMenuItem}"
-                        Click="ImportFile_Click"/>
+                        Click="ImportFile_Click" InputGestureText="Ctrl+I"/>
                     <MenuItem Header="Delete" 
                         Template="{DynamicResource SingleDropDownMenuItem}"
-                        Click="DeleteItem_Click"/>
+                        Click="DeleteItem_Click" InputGestureText="Delete"/>
                 </MenuItem>
                 <MenuItem Header="_Help">
                     <MenuItem Header="_Github Page" Click="GithubAboutItem_Click" Template="{DynamicResource SingleDropDownMenuItem}"/>
@@ -146,30 +146,34 @@
                                     <ContextMenu>
                                         <MenuItem Header="Open" 
                                                   Template="{DynamicResource SingleDropDownMenuItem}"
-                                                  Click="OpenMenuItem_Click"/>
+                                                  Click="OpenMenuItem_Click" InputGestureText="Enter"/>
                                         <MenuItem Header="Open with..." 
                                                   Template="{DynamicResource SingleDropDownMenuItem}"
-                                                  Click="OpenWithMenuItem_Click" IsEnabled="{Binding Path=isFile}"/>
+                                                  Click="OpenWithMenuItem_Click" IsEnabled="{Binding Path=isFile}" InputGestureText="Shift+Enter"/>
                                         <Separator></Separator>
                                         <MenuItem Header="Add Folder"
                                                   Template="{DynamicResource SingleDropDownMenuItem}"
                                                   Click="CreateFolderMenuItem_Click"/>
-                                        <Separator></Separator>
+                                        <Separator/>
+                                        <MenuItem Header="Import"
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="ImportFile_Click" InputGestureText="Ctrl+I"/>
+                                        <MenuItem Header="Replace"
+                                                  Template="{DynamicResource SingleDropDownMenuItem}"
+                                                  Click="ReplaceFile_Click" InputGestureText="Ctrl+R"/>
+                                        <Separator/>
                                         <MenuItem Header="Rename" 
                                                   Template="{DynamicResource SingleDropDownMenuItem}"
                                                   Click="RenameItem_Click"/>
                                         <MenuItem Header="Copy"
                                                   Template="{DynamicResource SingleDropDownMenuItem}"
-                                                  Click="CopyItem_Click"/>
+                                                  Click="CopyItem_Click" InputGestureText="Ctrl+C"/>
                                         <MenuItem Header="Paste"
                                                   Template="{DynamicResource SingleDropDownMenuItem}"
-                                                  Click="PasteItem_Click"/>
-                                        <MenuItem Header="Import"
-                                                  Template="{DynamicResource SingleDropDownMenuItem}"
-                                                  Click="ImportFile_Click"/>
+                                                  Click="PasteItem_Click" InputGestureText="Ctrl+V"/>
                                         <MenuItem Header="Delete" 
                                                   Template="{DynamicResource SingleDropDownMenuItem}"
-                                                  Click="DeleteItem_Click"/>
+                                                  Click="DeleteItem_Click" InputGestureText="Delete"/>
                                     </ContextMenu>
                                 </StackPanel.ContextMenu>
                             </StackPanel>

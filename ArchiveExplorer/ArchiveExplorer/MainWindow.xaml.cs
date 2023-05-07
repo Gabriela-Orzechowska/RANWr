@@ -272,7 +272,9 @@ namespace ArchiveExplorer
             }
         }
 
-        private void NewFile_Click(object sender, RoutedEventArgs e)
+        private void NewFile_Click(object sender, RoutedEventArgs e) => CreateNewFile();
+
+        private void CreateNewFile()
         {
             if (currentFile != null)
             {
@@ -292,7 +294,9 @@ namespace ArchiveExplorer
             UpdatePath();
         }
 
-        private void OpenFile_Click(object sender, RoutedEventArgs e)
+        private void OpenFile_Click(object sender, RoutedEventArgs e) => OpenFileDialog();
+
+        private void OpenFileDialog()
         {
             var dialog = new OpenFileDialog();
             dialog.Filter = "Nintendo DARCH Archive|*.arc;*.szs;*.u8";
@@ -314,8 +318,8 @@ namespace ArchiveExplorer
 
         private void QuickSave_Click(object sender, RoutedEventArgs e)
         {
-            if(currentFilePath != null) saveFile(2);
             if (currentFile == null) return;
+            if (currentFilePath != null) saveFile(2);
             else
             {
                 QuickSaveAs_Click(sender, e);
@@ -338,8 +342,8 @@ namespace ArchiveExplorer
 
         private void FullSave_Click(object sender, RoutedEventArgs e)
         {
-            if (currentFilePath != null) saveFile();
             if (currentFile == null) return;
+            if (currentFilePath != null) saveFile();
             else
             {
                 FullSaveAs_Click(sender, e);
@@ -360,19 +364,44 @@ namespace ArchiveExplorer
             }
         }
 
-        private void ImportFile_Click(object sender, RoutedEventArgs e)
+        private void ImportFile_Click(object sender, RoutedEventArgs e) => ImportFileDialog();
+
+        private void ImportFileDialog() 
         {
+            if(currentFile == null) return;
             var dialog = new OpenFileDialog();
             dialog.Multiselect = true;
             bool? result = dialog.ShowDialog();
-            if(result == true)
+            if (result == true)
             {
-                foreach(var file in dialog.FileNames)
+                foreach (var file in dialog.FileNames)
                 {
                     var extension = Path.GetExtension(file);
                     if (extension == "*.szs" || extension == "*.arc" || extension == "*.u8") continue;
-                    TryImportFile(file);
+                    TryImportFile(file,false,false);
                 }
+            }
+        }
+
+        private void ReplaceFile_Click(object sender, RoutedEventArgs e)
+        {
+            ReplaceFileDialog();
+        }
+
+        private void ReplaceFileDialog()
+        {
+            if (currentFile == null) return;
+            var dialog = new OpenFileDialog();
+            dialog.Multiselect = false;
+            bool? result = dialog.ShowDialog();
+            if (result == true)
+            {
+                var file = dialog.FileName;
+                var extension = Path.GetExtension(file);
+                if (extension == "*.szs" || extension == "*.arc" || extension == "*.u8") return;
+                var currentItem = FileView.SelectedItem as FileListItem;
+                if (currentItem == null) return;
+                TryImportFile(file, false, false, currentItem.Text, true);
             }
         }
 
@@ -414,12 +443,17 @@ namespace ArchiveExplorer
         private void FileView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             FileListItem item = ((FrameworkElement)e.OriginalSource).DataContext as FileListItem;
-
-            if (item == null) return;
             if (e.ChangedButton != MouseButton.Left) return;
 
+            OpenCurrentSelected(item);
+        }
+
+        private void OpenCurrentSelected(FileListItem item)
+        {
+            if (item == null) return;
+
             DARCH.Node node = item.Node;
-            if(node.Type == DARCH.Node.NodeType.File)
+            if (node.Type == DARCH.Node.NodeType.File)
             {
                 currentFile.OpenNode(node);
             }
@@ -451,6 +485,11 @@ namespace ArchiveExplorer
         private void OpenWithMenuItem_Click(object sender, RoutedEventArgs e)
         {
             FileListItem item = ((MenuItem)sender).DataContext as FileListItem;
+            OpenCurrentSelectedWith(item);
+        }
+
+        private void OpenCurrentSelectedWith(FileListItem item)
+        {
             if (item == null) return;
             DARCH.Node node = item.Node;
             if (node.Type == DARCH.Node.NodeType.File)
@@ -458,7 +497,6 @@ namespace ArchiveExplorer
                 currentFile.OpenWithNode(node);
             }
         }
-
 
         StackPanel lastListViewItemPanel = null;
         FileListItem lastItem = null;
@@ -479,9 +517,14 @@ namespace ArchiveExplorer
         private void RenameItem_Click(object sender, RoutedEventArgs e)
         {
             lastItem = ((MenuItem)sender).DataContext as FileListItem;
-            foreach(var child in lastListViewItemPanel.Children)
+            RenameFile();
+        }
+
+        private void RenameFile()
+        {
+            foreach (var child in lastListViewItemPanel.Children)
             {
-                if(child is TextBox)
+                if (child is TextBox)
                 {
                     TextBox textBox = (TextBox)child;
                     originalName = textBox.Text;
@@ -494,7 +537,6 @@ namespace ArchiveExplorer
                     textBox.SelectAll();
                 }
             }
-
         }
 
         private void CreateFolderMenuItem_Click(object sender, RoutedEventArgs e)
@@ -618,19 +660,19 @@ namespace ArchiveExplorer
             UpdateTreeView();
         }
 
-        private void TryImportFile(string filepath, bool forceDuplicate = false)
+        private void TryImportFile(string filepath, bool forceDuplicate = false, bool importDARCH = true, string originalPath = null, bool forceOverride = false)
         {
-            if (currentFile == null) return;
             bool isDirectory = File.GetAttributes(filepath).HasFlag(FileAttributes.Directory);
-            byte[] data = Array.Empty<byte>();
+            byte[] data;
             string name = Path.GetFileName(filepath);
+            if(originalPath != null) name = Path.GetFileName(originalPath);
             if (!isDirectory)
             {
                 data = File.ReadAllBytes(filepath);
                 var signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
                 if (signature == DARCH.Signature || signature == YAZ0.SignatureHex)
                 {
-                    TryOpenFile(filepath);
+                    if(importDARCH) TryOpenFile(filepath);
                     return;
                 }
                 if (currentFile == null) return;
@@ -644,6 +686,11 @@ namespace ArchiveExplorer
                     {
                         string newName = currentFile.GetFirstNameAvailable(name, currentNode);
                         folderPath = Path.Combine(curFolderPath, newName);
+                        File.Copy(filepath, folderPath, true);
+                    }
+                    else if (forceOverride)
+                    {
+                        if (folderPath == filepath) return;
                         File.Copy(filepath, folderPath, true);
                     }
                     else
@@ -667,6 +714,7 @@ namespace ArchiveExplorer
             }
             else
             {
+                if (currentFile == null) return;
                 var curFolderPath = Path.Combine(currentFile.TemporaryPath, currentFile.GetNodePath(currentNode));
                 var folderPath = Path.Combine(curFolderPath, name);
 
@@ -893,17 +941,11 @@ namespace ArchiveExplorer
             return new(data, filename);
         }
 
-        private void AboutItem_Click(object sender, RoutedEventArgs e)
+        private void AboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://www.youtube.com/watch?v=KSPxHniCtmw");
+        private void GithubAboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://github.com/Gabriela-Orzechowska/RANWr");
+
+        private void OpenLinkInBrowser(string uri)
         {
-            var uri = "https://www.youtube.com/watch?v=KSPxHniCtmw";
-            var psi = new System.Diagnostics.ProcessStartInfo();
-            psi.UseShellExecute = true;
-            psi.FileName = uri;
-            System.Diagnostics.Process.Start(psi);
-        }
-        private void GithubAboutItem_Click(object sender, RoutedEventArgs e)
-        {
-            var uri = "https://github.com/Gabriela-Orzechowska/RANWr";
             var psi = new System.Diagnostics.ProcessStartInfo();
             psi.UseShellExecute = true;
             psi.FileName = uri;

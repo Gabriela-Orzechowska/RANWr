@@ -152,7 +152,7 @@ namespace ArchiveExplorer
             { ".brlan", "Binary Revolution Layout Animation" },
             { ".brlyt", "Binary Revolution Layout" },
 
-            { ".thp", "THP Movie file" },
+            { ".thp", "THP Movie File" },
             { ".tpl", "Texture Palette Library" },
 
             //Sound
@@ -198,23 +198,46 @@ namespace ArchiveExplorer
             { ".bfg", "Binary Fog" },
             { ".blight", "Binary Lighting" },
         };
-
+        
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if(Keyboard.Modifiers == ModifierKeys.Control)
             {
-                if (e.Key == Key.S)
-                    saveFile(2);
-                else if (e.Key == Key.C)
-                    CopyFiles();
-                else if (e.Key == Key.V)
-                    PasteFiles();
-                else if (e.Key == Key.D)
-                    DuplicateFile();
+                if(Keyboard.Modifiers == ModifierKeys.Shift)
+                {
+                    switch(e.Key)
+                    {
+                        case Key.S:
+                            saveFile(); break;
+                    }
+                }
+                else
+                {
+                    switch (e.Key)
+                    {
+                        case Key.S:
+                            saveFile(2); break;
+                        case Key.C:
+                            CopyFiles(); break;
+                        case Key.V:
+                            PasteFiles(); break;
+                        case Key.D:
+                            DuplicateFile(); break;
+                        case Key.N:
+                            CreateNewFile(); break;
+                        case Key.O:
+                            OpenFileDialog(); break;
+                        case Key.I:
+                            ImportFileDialog(); break;
+                        case Key.R:
+                            ReplaceFileDialog(); break;
+                    }
+                }
             }
             else if(e.Key == Key.Delete)
             {
-                if(FileView.SelectedItems.Count > 0)
+                if (currentFile == null) return;
+                if (FileView.SelectedItems.Count > 0)
                 {
                     List<FileListItem> items = new();
                     foreach(var selItem in FileView.SelectedItems)
@@ -225,7 +248,17 @@ namespace ArchiveExplorer
                     return;
                 }
             }
+            else if(e.Key == Key.Enter)
+            {
+                if (currentFile == null) return;
+                FileListItem item = FileView.SelectedItem as FileListItem;
+                if(Keyboard.Modifiers == ModifierKeys.Shift)
+                    OpenCurrentSelectedWith(item);
+                else 
+                    OpenCurrentSelected(item);
+            }
         }
+
 
         private void CopyFiles()
         {

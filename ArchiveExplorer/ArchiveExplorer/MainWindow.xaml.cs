@@ -46,7 +46,18 @@ namespace ArchiveExplorer
             }
             CheckForUpdate();
 
+#if DEBUG
+            AllocConsole();
+            Console.WriteLine($"RANWr ArchiveExplorer {AppTag}.{Version} Debug Build - {Properties.Resources.BuildDate}");
+#endif
+
         }
+
+        [DllImport("Kernel32")]
+        public static extern void AllocConsole();
+
+        [DllImport("Kernel32")]
+        public static extern void FreeConsole();
 
         private void CheckForUpdate()
         {
@@ -82,7 +93,7 @@ namespace ArchiveExplorer
                     }
                 }
             }
-            if (version != baseVersion)
+            if (version != baseVersion) 
             {
                 MessageBoxResult result = MessageBox.Show($"There's a new version available! Would you like to go to the download page?\n\nChangelog:\n{_body}", "New Version!", MessageBoxButton.YesNo);
                 if (result == MessageBoxResult.Yes)
@@ -974,7 +985,7 @@ namespace ArchiveExplorer
             return new(data, filename);
         }
 
-        private void AboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://www.youtube.com/watch?v=KSPxHniCtmw");
+        private void AboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://www.youtube.com/watch?v=9cX17CeYKt0");
         private void GithubAboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://github.com/Gabriela-Orzechowska/RANWr");
 
         private void OpenLinkInBrowser(string uri)

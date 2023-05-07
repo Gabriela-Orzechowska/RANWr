@@ -19,11 +19,16 @@ using System.Drawing.Imaging;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Collections.Specialized;
+using System.Net;
+using System.Text.Json;
 
 namespace ArchiveExplorer
 {
     public partial class MainWindow : Window
     {
+
+        public static readonly string AppTag = "AE";
+        public static readonly string Version = "v0.24";
 
         public MainWindow()
         {
@@ -39,7 +44,87 @@ namespace ArchiveExplorer
             {
                 TryOpenFile(args[1]);
             }
+            CheckForUpdate();
 
+        }
+
+        private void CheckForUpdate()
+        {
+            string html = HTMLGetRequest("https://api.github.com/repos/Gabriela-Orzechowska/RANWr/releases");
+            github_releases[] releases = null;
+            try
+            {
+                releases = JsonSerializer.Deserialize<github_releases[]>(html);
+            }
+            catch
+            {
+                return;
+            }
+            if (releases == null) return;
+            int baseVersion = int.Parse(Version.Replace(".", "").Substring(1));
+            int version = baseVersion;
+            string versionUri = string.Empty;
+            string downloadUri = string.Empty;
+            string _body = "";
+
+            foreach (var release in releases)
+            {
+                if (release.tag_name.StartsWith(AppTag + "."))
+                {
+                    var newVersion = int.Parse(release.tag_name.Replace(".", "").Substring(AppTag.Length + 2));
+                    if (newVersion > version)
+                    {
+                        version = newVersion;
+                        versionUri = release.html_url;
+                        _body = release.body;
+                        if (release.assets.Length > 0)
+                            downloadUri = release.assets[0].browser_download_url;
+                    }
+                }
+            }
+            if (version != baseVersion)
+            {
+                MessageBoxResult result = MessageBox.Show($"There's a new version available! Would you like to go to the download page?\n\nChangelog:\n{_body}", "New Version!", MessageBoxButton.YesNo);
+                if (result == MessageBoxResult.Yes)
+                {
+                    OpenLinkInBrowser(downloadUri);
+                }
+            }
+        }
+
+        public struct github_releases
+        {
+            public string html_url { get; set; }
+            public string tag_name { get; set; }
+            public string name { get; set; }
+            public string body { get; set; }
+            public github_assets[] assets { get; set; }
+        }
+        public struct github_assets
+        {
+            public string url { get; set; }
+            public string name { get; set; }
+            public string browser_download_url { get; set; }
+        }
+
+        public string HTMLGetRequest(string uri)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
+            request.Method = "GET";
+            request.Headers["User-Agent"] = "RANWr Auto-Updater";
+            try
+            {
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                using (Stream stream = response.GetResponseStream())
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+            catch
+            {
+                return "";
+            }
         }
 
         static void ExceptionHandler(object sender, UnhandledExceptionEventArgs args)

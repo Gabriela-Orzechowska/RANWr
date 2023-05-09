@@ -28,7 +28,7 @@ namespace ArchiveExplorer
     {
 
         public static readonly string AppTag = "AE";
-        public static readonly string Version = "v0.24";
+        public static readonly string Version = "v0.25";
 
         public MainWindow()
         {
@@ -232,6 +232,8 @@ namespace ArchiveExplorer
                             CopyFiles(); break;
                         case Key.V:
                             PasteFiles(); break;
+                        case Key.X:
+                            CutFiles(); break;
                         case Key.D:
                             DuplicateFile(); break;
                         case Key.N:
@@ -282,8 +284,35 @@ namespace ArchiveExplorer
                 string exportPath = currentFile.PathCombine(currentFile.TemporaryPath, nodePath);
                 paths.Add(exportPath);
             }
+
             Clipboard.SetFileDropList(paths);
         }
+
+        private void CutFiles()
+        {
+            /*
+            if (FileView.SelectedItems.Count == 0) return;
+            StringCollection paths = new StringCollection();
+            foreach (FileListItem item in FileView.SelectedItems)
+            {
+                DARCH.Node node = item.Node;
+                string nodePath = currentFile.GetNodePath(node);
+                string exportPath = currentFile.PathCombine(currentFile.TemporaryPath, nodePath);
+                paths.Add(exportPath);
+            }
+            DataObject data = new DataObject();
+
+            byte[] moveEffect = new byte[] { 2, 0, 0, 0 };
+            MemoryStream dropEffect = new MemoryStream();
+            dropEffect.Write(moveEffect, 0, moveEffect.Length);
+
+
+            data.SetFileDropList(paths);
+            data.SetData("Preferred DropEffect", dropEffect);
+            Clipboard.SetDataObject(data);
+            */
+        }
+
 
         private void PasteFiles()
         {
@@ -456,9 +485,68 @@ namespace ArchiveExplorer
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 foreach (var file in files)
                 {
+                    if (file.Contains(currentFile.TemporaryPath)) continue;
                     TryImportFile(file);
                 }
             }
+        }
+
+        public void FileViewElement_Drop(object sender, DragEventArgs e)
+        {
+            FileListItem item = ((StackPanel)sender).DataContext as FileListItem;
+            if(item == null) return;
+            
+            var node = item.Node;
+            if (node == null) return;
+            if (node.Type == DARCH.Node.NodeType.File) return;
+
+            if (e.Data is DataObject && ((DataObject)e.Data).ContainsFileDropList())
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                foreach (var file in files)
+                {
+                    TryImportFile(file, node);
+                    FileAttributes attr = File.GetAttributes(file);
+                    string relative = Path.GetRelativePath(currentFile.TemporaryPath, file);
+                    currentFile.RemoveNode(currentFile.GetNodeByPath(relative));
+                    if (attr.HasFlag(FileAttributes.Directory)) Directory.Delete(file);
+                    else File.Delete(file);
+                }
+
+            }
+            UpdateTreeView();
+            UpdateListView(currentNode);
+        }
+
+        private void TreeViewItem_Drop(object sender, DragEventArgs e) 
+        {
+            TreeViewItem item = sender as TreeViewItem;
+            if (item == null) return;
+            if (nodeConnects.TryGetValue(item, out DARCH.Node node))
+            {
+                if (node == null) return;
+                if (e.Data is DataObject && ((DataObject)e.Data).ContainsFileDropList())
+                {
+                    string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                    foreach (var file in files)
+                    {
+                        TryImportFile(file, node);
+                        FileAttributes attr = File.GetAttributes(file);
+                        string relative = Path.GetRelativePath(currentFile.TemporaryPath, file);
+                        currentFile.RemoveNode(currentFile.GetNodeByPath(relative));
+                        if (attr.HasFlag(FileAttributes.Directory)) Directory.Delete(file);
+                        else File.Delete(file);
+                    }
+                }
+            }
+            UpdateTreeView();
+            UpdateListView(currentNode);
+        }
+
+
+        private void FileTextBox_PreviewDragOver(object sender, DragEventArgs e)
+        {
+            e.Handled= true;
         }
 
         private void GoBack_Click(object sender, RoutedEventArgs e)
@@ -490,6 +578,29 @@ namespace ArchiveExplorer
             if (e.ChangedButton != MouseButton.Left) return;
 
             OpenCurrentSelected(item);
+        }
+
+
+        private void lstItem_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                if (e.Source != null)
+                {
+                    List<string> myList = new List<string>();
+                    foreach (FileListItem item in FileView.SelectedItems)
+                    {
+                        var node = item.Node;
+                        if(node == null) continue;
+                        string nodePath = currentFile.GetNodePath(node);
+                        string exportPath = currentFile.PathCombine(currentFile.TemporaryPath, nodePath);
+                        myList.Add(exportPath);
+                    }
+
+                    DataObject dataObject = new DataObject(DataFormats.FileDrop,myList.ToArray());
+                    DragDrop.DoDragDrop(FileView, dataObject, DragDropEffects.Copy);
+                }
+            }
         }
 
         private void OpenCurrentSelected(FileListItem item)
@@ -706,6 +817,11 @@ namespace ArchiveExplorer
 
         private void TryImportFile(string filepath, bool forceDuplicate = false, bool importDARCH = true, string originalPath = null, bool forceOverride = false)
         {
+            TryImportFile(filepath, currentNode, forceDuplicate, importDARCH, originalPath, forceOverride);
+        }
+
+        private void TryImportFile(string filepath, DARCH.Node importNode, bool forceDuplicate = false, bool importDARCH = true, string originalPath = null, bool forceOverride = false)
+        {
             bool isDirectory = File.GetAttributes(filepath).HasFlag(FileAttributes.Directory);
             byte[] data;
             string name = Path.GetFileName(filepath);
@@ -713,14 +829,17 @@ namespace ArchiveExplorer
             if (!isDirectory)
             {
                 data = File.ReadAllBytes(filepath);
-                var signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
-                if (signature == DARCH.Signature || signature == YAZ0.SignatureHex)
+                if (data.Length > 4)
                 {
-                    if(importDARCH) TryOpenFile(filepath);
-                    return;
+                    var signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
+                    if (signature == DARCH.Signature || signature == YAZ0.SignatureHex)
+                    {
+                        if (importDARCH) TryOpenFile(filepath);
+                        return;
+                    }
                 }
                 if (currentFile == null) return;
-                var curFolderPath = Path.Combine(currentFile.TemporaryPath, currentFile.GetNodePath(currentNode));
+                var curFolderPath = Path.Combine(currentFile.TemporaryPath, currentFile.GetNodePath(importNode));
                 var folderPath = Path.Combine(curFolderPath, name);
                 
 
@@ -728,7 +847,7 @@ namespace ArchiveExplorer
                 {
                     if (forceDuplicate)
                     {
-                        string newName = currentFile.GetFirstNameAvailable(name, currentNode);
+                        string newName = currentFile.GetFirstNameAvailable(name, importNode);
                         folderPath = Path.Combine(curFolderPath, newName);
                         File.Copy(filepath, folderPath, true);
                     }
@@ -739,6 +858,7 @@ namespace ArchiveExplorer
                     }
                     else
                     {
+                        if (folderPath == filepath) return;
                         MessageBoxResult result = MessageBox.Show($"File {Path.GetFileName(folderPath)} already exists, replace it?", "Warning", MessageBoxButton.YesNoCancel);
                         if (result == MessageBoxResult.Yes)
                         {
@@ -747,7 +867,7 @@ namespace ArchiveExplorer
                         }
                         else if (result == MessageBoxResult.No)
                         {
-                            string newName = currentFile.GetFirstNameAvailable(name, currentNode);
+                            string newName = currentFile.GetFirstNameAvailable(name, importNode);
                             folderPath = Path.Combine(curFolderPath, newName);
                             File.Copy(filepath, folderPath, true);
                         }
@@ -759,7 +879,7 @@ namespace ArchiveExplorer
             else
             {
                 if (currentFile == null) return;
-                var curFolderPath = Path.Combine(currentFile.TemporaryPath, currentFile.GetNodePath(currentNode));
+                var curFolderPath = Path.Combine(currentFile.TemporaryPath, currentFile.GetNodePath(importNode));
                 var folderPath = Path.Combine(curFolderPath, name);
 
 
@@ -842,6 +962,8 @@ namespace ArchiveExplorer
             archiveNode.Tag = currentFile.name;
             archiveNode.Header = currentFile.name;
             archiveNode.IsExpanded = true;
+            archiveNode.AllowDrop= true;
+            archiveNode.Drop += TreeViewItem_Drop;
             FolderView.Items.Add(archiveNode);
             nodeConnects.Add(archiveNode, currentFile.structure);
         }
@@ -928,6 +1050,8 @@ namespace ArchiveExplorer
                     TreeViewItem childNodeItem = GetNodeItem(child);
                     childNodeItem.IsExpanded = true;
                     childNodeItem.Header = child.Name;
+                    childNodeItem.AllowDrop = true;
+                    childNodeItem.Drop += TreeViewItem_Drop;
                     curNodeItem.Items.Add(childNodeItem);
                     nodeConnects.Add(childNodeItem, child);
                 }
@@ -985,7 +1109,7 @@ namespace ArchiveExplorer
             return new(data, filename);
         }
 
-        private void AboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://www.youtube.com/watch?v=9cX17CeYKt0");
+        private void AboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://www.youtube.com/watch?v=__nioTv19bQ");
         private void GithubAboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://github.com/Gabriela-Orzechowska/RANWr");
 
         private void OpenLinkInBrowser(string uri)

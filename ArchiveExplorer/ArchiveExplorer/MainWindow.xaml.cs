@@ -968,7 +968,8 @@ namespace ArchiveExplorer
 
         private void UpdatePath()
         {
-            string path = currentFile.GetNodePath(currentNode);
+            string path = $"{currentFile.name}/{currentFile.GetNodePath(currentNode)}";
+            if (currentNode.Name != "") path += "/";
             PathBar.Text = path;
         }
 

@@ -30,13 +30,11 @@ namespace gablibela
 
                 while (data.Count < DecompressedSize)
                 {
-                    byte Code = reader.ReadByte();
-                    BitArray Flags = new BitArray(new byte[1] { Code });
+                    byte Mask = reader.ReadByte();
 
-                    for (Int32 i = 7; i > -1; i--)
+                    for (Int32 i = 0; i < 8; i++)
                     {
-                        if (Flags[i] == true) data.Add(reader.ReadByte());
-                        else
+                        if ((Mask & 0x80) == 0)
                         {
                             if (data.Count >= DecompressedSize) break;
 
@@ -45,7 +43,10 @@ namespace gablibela
                             Int32 Length = (ReadByte & 0xF0) == 0 ? reader.ReadByte() + 0x12 : (byte)((ReadByte & 0xF0) >> 4) + 2;
 
                             for (Int32 j = 0; j < Length; j++) data.Add(data[data.Count - Offset]);
+                            
                         }
+                        else data.Add(reader.ReadByte());
+                        Mask = (byte)(Mask << 1);
                     }
                 }
                 return data.ToArray();
@@ -63,11 +64,6 @@ namespace gablibela
                 return data.ToArray();
             }
 
-            //
-            // After hours of trying, finished by borrowing parts from
-            // https://github.com/MichaelHinrichs/Switch-Toolbox/blob/master/Switch_Toolbox_Library/Compression/Formats/Yaz0.cs
-            // All credits here
-            //
             public static byte[] Encode(byte[] source, byte level = 10)
             {
                 UInt32 sourceLenght = (UInt32)source.Length;
@@ -101,15 +97,19 @@ namespace gablibela
                             break;
 
                         numBytes = 1;
-
+                        UInt64 search = 0;
                         if (range != 0)
                         {
-                            UInt64 search = Search(source, position, maxLenght, range, sourceEnd);
+                            search = Search(source, position, maxLenght, range, sourceEnd);
                             found = search >> 32;
                             numBytes = search & 0xFFFFFFFF;
                         }
-
-                        if (numBytes > 2)
+                        if (numBytes < 3)
+                        {
+                            destination[codeBytePosition] |= (byte)(1 << (7 - i));
+                            destination[destinationPosition] = source[position]; destinationPosition++; position++;
+                        }
+                        else
                         {
                             diff = (UInt32)(position - found - 1);
 
@@ -125,11 +125,6 @@ namespace gablibela
                                 destination[destinationPosition] = (byte)((numBytes - 0x12) & 0xFF); destinationPosition++;
                             }
                             position += (UInt32)numBytes;
-                        }
-                        else
-                        {
-                            destination[codeBytePosition] |= (byte)(1 << (7 - i));
-                            destination[destinationPosition] = source[position]; destinationPosition++; position++;
                         }
                     }
                 }

@@ -270,6 +270,11 @@ namespace ArchiveExplorer
                 else 
                     OpenCurrentSelected(item);
             }
+            else if(e.Key == Key.F2)
+            {
+                lastItem = FileView.SelectedItem as FileListItem;
+                RenameFile();
+            }
         }
 
 
@@ -581,7 +586,7 @@ namespace ArchiveExplorer
         }
 
 
-        private void lstItem_MouseMove(object sender, MouseEventArgs e)
+        private void FileViewItem_Move(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
@@ -657,11 +662,6 @@ namespace ArchiveExplorer
         FileListItem lastItem = null;
         string originalName = null;
 
-        private void FileItem_MouseEnter(object sender, MouseEventArgs e)
-        {
-            lastListViewItemPanel = sender as StackPanel;
-        }
-
         private void FileView_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
             FileListItem item = ((ListView)sender).SelectedItem as FileListItem;
@@ -675,23 +675,42 @@ namespace ArchiveExplorer
             RenameFile();
         }
 
+
         private void RenameFile()
         {
-            foreach (var child in lastListViewItemPanel.Children)
+            ListViewItem item = FileView.ItemContainerGenerator.ContainerFromItem(FileView.SelectedItem) as ListViewItem;
+            ContentPresenter presenter = FindVisualChild<ContentPresenter>(item);
+            DataTemplate template = presenter.ContentTemplate;
+            TextBox textBox = (TextBox)template.FindName("FileTextBox", presenter);
+
+            originalName = textBox.Text;
+            textBox.IsReadOnly = false;
+            textBox.Focusable = true;
+            textBox.Focus();
+            textBox.CaretBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 255, 255, 255));
+            textBox.Cursor = Cursors.IBeam;
+            textBox.BorderThickness = new Thickness(1);
+            textBox.SelectAll();
+        }
+
+        private childItem FindVisualChild<childItem>(DependencyObject obj)
+    where childItem : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
             {
-                if (child is TextBox)
+                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
+                if (child != null && child is childItem)
                 {
-                    TextBox textBox = (TextBox)child;
-                    originalName = textBox.Text;
-                    textBox.IsReadOnly = false;
-                    textBox.Focusable = true;
-                    textBox.Focus();
-                    textBox.CaretBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 255, 255, 255));
-                    textBox.Cursor = Cursors.IBeam;
-                    textBox.BorderThickness = new Thickness(1);
-                    textBox.SelectAll();
+                    return (childItem)child;
+                }
+                else
+                {
+                    childItem childOfChild = FindVisualChild<childItem>(child);
+                    if (childOfChild != null)
+                        return childOfChild;
                 }
             }
+            return null;
         }
 
         private void CreateFolderMenuItem_Click(object sender, RoutedEventArgs e)
@@ -960,7 +979,25 @@ namespace ArchiveExplorer
             FolderView.Items.Clear();
             TreeViewItem archiveNode = GetNodeItem(currentFile.structure);
             archiveNode.Tag = currentFile.name;
-            archiveNode.Header = currentFile.name;
+
+            StackPanel panel = new();
+            panel.Orientation = Orientation.Horizontal;
+            panel.Height = 18;
+
+            TextBlock block = new();
+            System.Windows.Controls.Image image = new();
+            var uri = new Uri("/Icons/FolderOpened.png", UriKind.Relative);
+            image.Source = new BitmapImage(uri);
+            image.Height = 18;
+
+            block.Text = currentFile.name;
+            block.Height= 18;
+            block.Padding = new Thickness(5,0,0,0);
+
+            panel.Children.Add(image);
+            panel.Children.Add(block);
+
+            archiveNode.Header = panel;
             archiveNode.IsExpanded = true;
             archiveNode.AllowDrop= true;
             archiveNode.Drop += TreeViewItem_Drop;
@@ -1027,6 +1064,7 @@ namespace ArchiveExplorer
             public string Type { get; set; }
             public bool isDir { get; set; }
             public bool isFile { get; set; }
+            public TextBox FileTextBox;
         }
 
         public static string FormatFileSize(long bytes)
@@ -1049,7 +1087,27 @@ namespace ArchiveExplorer
                     if (child.Type == DARCH.Node.NodeType.File) continue;
                     TreeViewItem childNodeItem = GetNodeItem(child);
                     childNodeItem.IsExpanded = true;
-                    childNodeItem.Header = child.Name;
+
+                    StackPanel panel = new();
+                    panel.Orientation = Orientation.Horizontal;
+                    panel.Height = 18;
+
+                    TextBlock block = new();
+                    System.Windows.Controls.Image image = new();
+                    var uri = new Uri("/Icons/FolderOpened.png", UriKind.Relative);
+                    image.Source = new BitmapImage(uri);
+                    image.Height = 18;
+
+                    block.Text = child.Name;
+                    block.Height = 18;
+                    block.Padding = new Thickness(5, 0, 0, 0);
+
+                    panel.Children.Add(image);
+                    panel.Children.Add(block);
+
+                    childNodeItem.Header = panel;
+
+                    childNodeItem.DataContext= child;
                     childNodeItem.AllowDrop = true;
                     childNodeItem.Drop += TreeViewItem_Drop;
                     curNodeItem.Items.Add(childNodeItem);

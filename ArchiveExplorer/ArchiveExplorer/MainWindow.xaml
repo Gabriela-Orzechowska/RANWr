@@ -101,7 +101,6 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding Path=Text}"/>
                             </StackPanel>
-                            
                         </DataTemplate>
                     </TreeView.ItemTemplate>
                 </TreeView>
@@ -125,22 +124,23 @@
                         <TextBox Grid.Column="2" Margin="0,0,20,0" Height="24" IsReadOnly="True" x:Name="PathBar" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
                     </Grid>
                 </GroupBox.Header>
-                <ListView x:Name="FileView" MouseDoubleClick="FileView_MouseDoubleClick" MouseMove="lstItem_MouseMove"
+                <ListView x:Name="FileView" MouseDoubleClick="FileView_MouseDoubleClick" MouseMove="FileViewItem_Move"
                           MouseRightButtonUp="FileView_MouseRightButtonUp" ContextMenuOpening="FileView_ContextMenuOpening"
-                          >
+                         >
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Height="20" PreviewMouseRightButtonUp="FileItem_MouseEnter" MouseEnter="FileItem_MouseEnter" AllowDrop="True" Drop="FileViewElement_Drop">
+                            <StackPanel Name="Stacky" Orientation="Horizontal" Height="20" AllowDrop="True" Drop="FileViewElement_Drop">
                                 <Image Source="{Binding Path=Icon}"/>
                                 <TextBox Text="{Binding Path=Text}" Padding="5 0 0 0" Width="250"
                                          IsReadOnly="True" BorderThickness="0"
                                          Cursor="Arrow" CaretBrush="Transparent"
                                          Background="Transparent"
                                          Focusable="False"
-                                         x:Name="FileTextBox"
+                                         Name="FileTextBox"
                                          KeyDown="FileTextBox_KeyDown"
                                          LostFocus="FileTextBox_LostFocus"
-                                         PreviewDragOver="FileTextBox_PreviewDragOver"/>
+                                         PreviewDragOver="FileTextBox_PreviewDragOver"
+                                         />
                                 <TextBlock Text="{Binding Path=Size}" Width="70"/>
                                 <TextBlock Text="{Binding Path=Type}"/>
                                 <StackPanel.ContextMenu>
@@ -165,7 +165,7 @@
                                         <Separator/>
                                         <MenuItem Header="Rename" 
                                                   Template="{DynamicResource SingleDropDownMenuItem}"
-                                                  Click="RenameItem_Click"/>
+                                                  Click="RenameItem_Click" InputGestureText="F2"/>
                                         <MenuItem Header="Copy"
                                                   Template="{DynamicResource SingleDropDownMenuItem}"
                                                   Click="CopyItem_Click" InputGestureText="Ctrl+C"/>

@@ -153,8 +153,8 @@ namespace ArchiveExplorer
         public Dictionary<string, string> fileTypes = new Dictionary<string, string>()
         {
             //Effects
-            { ".breft", "Binary Revolution Effect Textures" },
-            { ".breff", "Binary Revolution Effect File" },
+            { ".breft", "Binary Revolution Effect Project Textures" },
+            { ".breff", "Binary Revolution Effect Project" },
 
             //Menu Files
             { ".bmg", "Binary Message Group" },
@@ -539,8 +539,11 @@ namespace ArchiveExplorer
                         FileAttributes attr = File.GetAttributes(file);
                         string relative = Path.GetRelativePath(currentFile.TemporaryPath, file);
                         currentFile.RemoveNode(currentFile.GetNodeByPath(relative));
-                        if (attr.HasFlag(FileAttributes.Directory)) Directory.Delete(file);
-                        else File.Delete(file);
+                        if (Path.Exists(file))
+                        {
+                            if (attr.HasFlag(FileAttributes.Directory)) Directory.Delete(file);
+                            else File.Delete(file);
+                        }
                     }
                 }
             }

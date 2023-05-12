@@ -417,12 +417,24 @@ namespace gablibela
                 if (CheckIfNodeIsExported(node))
                 {
                     if(node.Type == Node.NodeType.File) File.Delete(exportPath);
-                    else Directory.Delete(exportPath,true);
+                    else
+                    {
+                        if(node.Children.Count > 0)
+                        {
+                            RemoveNodes(node.Children.ToArray());
+                        }
+                        Directory.Delete(exportPath, true);
+                    }
                 }
                 if (node.Parent != null) node.Parent.Children.Remove(node);
                 rawNodes.Remove(node);
                 
                 RecalculateStructureIndexes();
+            }
+
+            public void RemoveNodes(Node[] nodes)
+            {
+                foreach(var node in nodes) RemoveNode(node);    
             }
 
             public string GetNodePath(Node node)

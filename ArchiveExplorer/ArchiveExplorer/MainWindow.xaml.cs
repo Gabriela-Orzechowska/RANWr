@@ -28,11 +28,12 @@ namespace ArchiveExplorer
     {
 
         public static readonly string AppTag = "AE";
-        public static readonly string Version = "v0.25";
+        public static readonly string Version = "v0.26";
 
         public MainWindow()
         {
             InitializeComponent();
+            this.Title = $"RANWr ArchiveExplorer {Version}";
             this.AllowDrop= true;
             this.Drop += MainWindow_Drop;
 

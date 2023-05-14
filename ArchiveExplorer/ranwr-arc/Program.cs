@@ -73,9 +73,9 @@ namespace ranwr
             var signature = BitConverter.ToUInt32(workFile.Take(4).Reverse().ToArray());
             if (signature == YAZ0.SignatureHex) workFile = YAZ0.Decode(original);
             signature = BitConverter.ToUInt32(workFile.Take(4).Reverse().ToArray());
-            if(signature == DARCH.Signature)
+            if(signature == ARC.Signature)
             {
-                DARCH darch = new DARCH(workFile, Path.GetFileName(file));
+                ARC darch = new ARC(workFile, Path.GetFileName(file));
                 Console.WriteLine($"{Title}\n");
                 darch.PrintArchive();
             }
@@ -118,7 +118,7 @@ namespace ranwr
 
             if (output == null) output = Path.GetFileNameWithoutExtension(file) + ".d";
             Directory.CreateDirectory(output);
-            DARCH darch = GetArchive(file);
+            ARC darch = GetArchive(file);
             darch.SetFolder(output);
             darch.ExportAllNodes();
 
@@ -137,7 +137,7 @@ namespace ranwr
             }
 
             if (output == null) output = Path.GetFileNameWithoutExtension(file) + ".szs";
-            DARCH darch = new();
+            ARC darch = new();
             darch.SetFolder(file);
             darch.UpdateAllNodeData(); ;
             byte[] data = YAZ0.Compress(darch.Encode());
@@ -181,9 +181,9 @@ namespace ranwr
             Console.WriteLine($"Could not find the file: {path}");
         }
 
-        public static DARCH GetArchive(string path) => GetArchive(File.ReadAllBytes(path));
+        public static ARC GetArchive(string path) => GetArchive(File.ReadAllBytes(path));
 
-        public static DARCH GetArchive(byte[] data)
+        public static ARC GetArchive(byte[] data)
         {
             var signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
             if (signature == YAZ0.SignatureHex)
@@ -191,7 +191,7 @@ namespace ranwr
                 data = YAZ0.Decode(data);
                 signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
             }
-            if (signature != DARCH.Signature) return null;
+            if (signature != ARC.Signature) return null;
 
             return new(data);
         }

@@ -146,9 +146,9 @@ namespace ArchiveExplorer
                             "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Stop);
         }
 
-        public Dictionary<TreeViewItem, DARCH.Node> nodeConnects = new();
-        public DARCH currentFile;
-        public DARCH.Node currentNode;
+        public Dictionary<TreeViewItem, ARC.Node> nodeConnects = new();
+        public ARC currentFile;
+        public ARC.Node currentNode;
         public string currentFilePath;
 
         public Dictionary<string, string> fileTypes = new Dictionary<string, string>()
@@ -285,7 +285,7 @@ namespace ArchiveExplorer
             StringCollection paths = new StringCollection();
             foreach (FileListItem item in FileView.SelectedItems)
             {
-                DARCH.Node node = item.Node;
+                ARC.Node node = item.Node;
                 string nodePath = currentFile.GetNodePath(node);
                 string exportPath = currentFile.PathCombine(currentFile.TemporaryPath, nodePath);
                 paths.Add(exportPath);
@@ -336,7 +336,7 @@ namespace ArchiveExplorer
         {
             FileListItem item = FileView.SelectedItem as FileListItem;
             if (item == null) return;
-            DARCH.Node node = item.Node;
+            ARC.Node node = item.Node;
             string nodePath = currentFile.GetNodePath(node);
             string exportPath = currentFile.PathCombine(currentFile.TemporaryPath, nodePath);
             TryImportFile(exportPath, true);
@@ -364,9 +364,9 @@ namespace ArchiveExplorer
                 currentFile.FreeArchive();
             }
 
-            DARCH darch = new();
-            darch.name = "untitled.arc";
-            currentFile = darch;
+            ARC arc = new();
+            arc.name = "untitled.arc";
+            currentFile = arc;
             UpdateTreeView();
             currentNode = currentFile.structure;
             UpdateListView(currentFile.structure);
@@ -378,7 +378,7 @@ namespace ArchiveExplorer
         private void OpenFileDialog()
         {
             var dialog = new OpenFileDialog();
-            dialog.Filter = "Nintendo DARCH Archive|*.arc;*.szs;*.u8";
+            dialog.Filter = "Nintendo ARC Archive|*.arc;*.szs;*.u8";
             bool? result = dialog.ShowDialog();
             if (result == true)
             {
@@ -390,7 +390,7 @@ namespace ArchiveExplorer
         {
             if (currentFile == null) return;
             currentFile.UpdateAllNodeData();
-            byte[] saveData = currentFile.EncodeDARCH();
+            byte[] saveData = currentFile.EncodeARC();
             if(Path.GetExtension(currentFilePath) == ".szs") saveData = YAZ0.Compress(saveData, level);
             File.WriteAllBytes(currentFilePath, saveData);
         }
@@ -408,7 +408,7 @@ namespace ArchiveExplorer
         private void QuickSaveAs_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new SaveFileDialog();
-            dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo DARCH Archive|*.arc;*.u8";
+            dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo ARC Archive|*.arc;*.u8";
             bool? result = dialog.ShowDialog();
             if (result == true)
             {
@@ -432,7 +432,7 @@ namespace ArchiveExplorer
         private void FullSaveAs_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new SaveFileDialog();
-            dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo DARCH Archive|*.arc;*.u8";
+            dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo ARC Archive|*.arc;*.u8";
             bool? result = dialog.ShowDialog();
             if (result == true)
             {
@@ -504,7 +504,7 @@ namespace ArchiveExplorer
             
             var node = item.Node;
             if (node == null) return;
-            if (node.Type == DARCH.Node.NodeType.File) return;
+            if (node.Type == ARC.Node.NodeType.File) return;
 
             if (e.Data is DataObject && ((DataObject)e.Data).ContainsFileDropList())
             {
@@ -528,7 +528,7 @@ namespace ArchiveExplorer
         {
             TreeViewItem item = sender as TreeViewItem;
             if (item == null) return;
-            if (nodeConnects.TryGetValue(item, out DARCH.Node node))
+            if (nodeConnects.TryGetValue(item, out ARC.Node node))
             {
                 if (node == null) return;
                 if (e.Data is DataObject && ((DataObject)e.Data).ContainsFileDropList())
@@ -572,7 +572,7 @@ namespace ArchiveExplorer
         {
             TreeViewItem item = (sender as TreeView).SelectedItem as TreeViewItem;
             if (item == null) return;
-            if (nodeConnects.TryGetValue(item, out DARCH.Node node))
+            if (nodeConnects.TryGetValue(item, out ARC.Node node))
             {
                 if (node == null) return;
                 currentNode = node;
@@ -616,8 +616,8 @@ namespace ArchiveExplorer
         {
             if (item == null) return;
 
-            DARCH.Node node = item.Node;
-            if (node.Type == DARCH.Node.NodeType.File)
+            ARC.Node node = item.Node;
+            if (node.Type == ARC.Node.NodeType.File)
             {
                 currentFile.OpenNode(node);
             }
@@ -633,8 +633,8 @@ namespace ArchiveExplorer
         {
             FileListItem item = ((MenuItem)sender).DataContext as FileListItem;
             if (item == null) return;
-            DARCH.Node node = item.Node;
-            if (node.Type == DARCH.Node.NodeType.File)
+            ARC.Node node = item.Node;
+            if (node.Type == ARC.Node.NodeType.File)
             {
                 currentFile.OpenNode(node);
             }
@@ -655,8 +655,8 @@ namespace ArchiveExplorer
         private void OpenCurrentSelectedWith(FileListItem item)
         {
             if (item == null) return;
-            DARCH.Node node = item.Node;
-            if (node.Type == DARCH.Node.NodeType.File)
+            ARC.Node node = item.Node;
+            if (node.Type == ARC.Node.NodeType.File)
             {
                 currentFile.OpenWithNode(node);
             }
@@ -720,7 +720,7 @@ namespace ArchiveExplorer
         private void CreateFolderMenuItem_Click(object sender, RoutedEventArgs e)
         {
             string newFolderName = currentFile.GetFirstNameAvailable("New Folder", currentNode);
-            DARCH.Node node = currentFile.AddNode(newFolderName, DARCH.Node.NodeType.Directory, currentNode, true);
+            ARC.Node node = currentFile.AddNode(newFolderName, ARC.Node.NodeType.Directory, currentNode, true);
             currentFile.ExportNode(node);
             UpdateListView(currentNode);
             UpdateTreeView();
@@ -838,12 +838,12 @@ namespace ArchiveExplorer
             UpdateTreeView();
         }
 
-        private void TryImportFile(string filepath, bool forceDuplicate = false, bool importDARCH = true, string originalPath = null, bool forceOverride = false)
+        private void TryImportFile(string filepath, bool forceDuplicate = false, bool importARC = true, string originalPath = null, bool forceOverride = false)
         {
-            TryImportFile(filepath, currentNode, forceDuplicate, importDARCH, originalPath, forceOverride);
+            TryImportFile(filepath, currentNode, forceDuplicate, importARC, originalPath, forceOverride);
         }
 
-        private void TryImportFile(string filepath, DARCH.Node importNode, bool forceDuplicate = false, bool importDARCH = true, string originalPath = null, bool forceOverride = false)
+        private void TryImportFile(string filepath, ARC.Node importNode, bool forceDuplicate = false, bool importARC = true, string originalPath = null, bool forceOverride = false)
         {
             bool isDirectory = File.GetAttributes(filepath).HasFlag(FileAttributes.Directory);
             byte[] data;
@@ -855,9 +855,9 @@ namespace ArchiveExplorer
                 if (data.Length > 4)
                 {
                     var signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
-                    if (signature == DARCH.Signature || signature == YAZ0.SignatureHex)
+                    if (signature == ARC.Signature || signature == YAZ0.SignatureHex)
                     {
-                        if (importDARCH) TryOpenFile(filepath);
+                        if (importARC) TryOpenFile(filepath);
                         return;
                     }
                 }
@@ -944,7 +944,7 @@ namespace ArchiveExplorer
                     else
                     {
                         var dialog = new SaveFileDialog();
-                        dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo DARCH Archive|*.arc;*.u8";
+                        dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo ARC Archive|*.arc;*.u8";
                         bool? newResult = dialog.ShowDialog();
                         if (newResult == true)
                         {
@@ -957,11 +957,11 @@ namespace ArchiveExplorer
                 currentFile.FreeArchive();
             }
 
-            DARCH darch = GetArchive(filepath, Path.GetFileName(filepath));
-            if (darch == null) return;
+            ARC arc = GetArchive(filepath, Path.GetFileName(filepath));
+            if (arc == null) return;
             currentFilePath = filepath;
-            currentFile = darch;
-            darch.ExportAllNodes();
+            currentFile = arc;
+            arc.ExportAllNodes();
             UpdateTreeView();
             UpdateListView(currentFile.structure);
             currentNode = currentFile.structure;
@@ -1025,14 +1025,14 @@ namespace ArchiveExplorer
             }
         }
 
-        private void UpdateListView(DARCH.Node node)
+        private void UpdateListView(ARC.Node node)
         {
-            List<DARCH.Node> nodes = node.Children.OrderByDescending(x => x.Type).ToList();
+            List<ARC.Node> nodes = node.Children.OrderByDescending(x => x.Type).ToList();
             FileView.Items.Clear();
             foreach(var child in nodes)
             {
                 FileListItem item = new FileListItem();
-                if (child.Type == DARCH.Node.NodeType.Directory)
+                if (child.Type == ARC.Node.NodeType.Directory)
                 {
                     var uri = new Uri("/Icons/FolderOpened.png", UriKind.Relative);
                     item.Icon = new BitmapImage(uri);
@@ -1053,7 +1053,7 @@ namespace ArchiveExplorer
                 {
                     item.Type = newName;
                 }
-                item.isDir = child.Type == DARCH.Node.NodeType.Directory;
+                item.isDir = child.Type == ARC.Node.NodeType.Directory;
                 item.isFile = !item.isDir;
                 
                 FileView.Items.Add(item);
@@ -1065,7 +1065,7 @@ namespace ArchiveExplorer
             public ImageSource Icon { get; set; }
             public string Text { get; set; }
             public string Size { get; set; }
-            public DARCH.Node Node { get; set; }
+            public ARC.Node Node { get; set; }
             public string Type { get; set; }
             public bool isDir { get; set; }
             public bool isFile { get; set; }
@@ -1081,7 +1081,7 @@ namespace ArchiveExplorer
             return $"{bytes / Math.Pow(unit, exp):F2} {("KMGTPE")[exp - 1]}B";
         }
 
-        private TreeViewItem GetNodeItem(DARCH.Node node)
+        private TreeViewItem GetNodeItem(ARC.Node node)
         {
             TreeViewItem curNodeItem = new();
             curNodeItem.IsExpanded = true;
@@ -1089,7 +1089,7 @@ namespace ArchiveExplorer
             { 
                 foreach(var child in node.Children)
                 {
-                    if (child.Type == DARCH.Node.NodeType.File) continue;
+                    if (child.Type == ARC.Node.NodeType.File) continue;
                     TreeViewItem childNodeItem = GetNodeItem(child);
                     childNodeItem.IsExpanded = true;
 
@@ -1133,7 +1133,7 @@ namespace ArchiveExplorer
                     else
                     {
                         var dialog = new SaveFileDialog();
-                        dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo DARCH Archive|*.arc;*.u8";
+                        dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo ARC Archive|*.arc;*.u8";
                         bool? newResult = dialog.ShowDialog();
                         if (newResult == true)
                         {
@@ -1158,9 +1158,9 @@ namespace ArchiveExplorer
             base.OnClosed(e);
         }
 
-        public static DARCH GetArchive(string path, string filename) => GetArchive(File.ReadAllBytes(path), filename);
+        public static ARC GetArchive(string path, string filename) => GetArchive(File.ReadAllBytes(path), filename);
 
-        public static DARCH GetArchive(byte[] data, string filename)
+        public static ARC GetArchive(byte[] data, string filename)
         {
             var signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
             if (signature == YAZ0.SignatureHex)
@@ -1168,7 +1168,7 @@ namespace ArchiveExplorer
                 data = YAZ0.Decode(data);
                 signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
             }
-            if (signature != DARCH.Signature) return null;
+            if (signature != ARC.Signature) return null;
             return new(data, filename);
         }
 

@@ -7,7 +7,7 @@ namespace gablibela
 {
     namespace arc
     {
-        public class DARCH
+        public class ARC
         {
             public static readonly UInt32 Signature = 0x55AA382D; //DARCH Signature
 
@@ -87,9 +87,9 @@ namespace gablibela
             public byte[] data;
             public string TemporaryPath;
 
-            public DARCH(byte[] data) : this(data, "untitled.arc") { }
+            public ARC(byte[] data) : this(data, "untitled.arc") { }
 
-            public DARCH(byte[] _data, string fileName)
+            public ARC(byte[] _data, string fileName)
             {
                 this.data = _data;
                 this.name = fileName;
@@ -130,7 +130,7 @@ namespace gablibela
                 TemporaryPath = GetTemporaryDirectory();
             }
 
-            public DARCH()
+            public ARC()
             {
                 rawNodeData = new NodeData[0];
                 Node struc = new("", new byte[0], Node.NodeType.Directory);
@@ -545,7 +545,7 @@ namespace gablibela
                 Directory.Delete(TemporaryPath, true);
             }
 
-            public byte[] EncodeDARCH()
+            public byte[] EncodeARC()
             {
                 MemoryStream stream= new MemoryStream();
                 BetterBinaryWriter writer = new BetterBinaryWriter(stream);

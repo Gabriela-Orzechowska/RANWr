@@ -16,7 +16,7 @@
 #### Supported File Formats
 | Format | Read | Save |
 |--------|----------|----------|
-| DARCH (U8) | Yes | Yes     |
+| ARC (U8) | Yes | Yes     |
 #### Compression
 | Format | Decode | Encode |
 |--------|----------|----------|

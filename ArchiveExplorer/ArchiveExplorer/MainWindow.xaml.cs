@@ -26,7 +26,7 @@ namespace ArchiveExplorer
 {
     public partial class MainWindow : Window
     {
-
+        private bool _saved = true;
         public static readonly string AppTag = "AE";
         public static readonly string Version = "v0.26";
 
@@ -101,6 +101,17 @@ namespace ArchiveExplorer
                     OpenLinkInBrowser(downloadUri);
                 }
             }
+        }
+
+        private void UpdateTitleSaveIndication(bool enabled)
+        {
+            if (this._saved == !enabled) return;
+
+            this._saved = !enabled;
+            if (!this._saved)
+                this.Title = this.Title + "*";
+            else
+                this.Title = this.Title.Substring(0, this.Title.Length - 1);
         }
 
         public struct github_releases
@@ -372,6 +383,7 @@ namespace ArchiveExplorer
             currentNode = currentFile.structure;
             UpdateListView(currentFile.structure);
             UpdatePath();
+            UpdateTitleSaveIndication(true);
         }
 
         private void OpenFile_Click(object sender, RoutedEventArgs e) => OpenFileDialog();
@@ -394,6 +406,7 @@ namespace ArchiveExplorer
             byte[] saveData = currentFile.EncodeARC();
             if(Path.GetExtension(currentFilePath) == ".szs") saveData = YAZ0.Compress(saveData, level);
             File.WriteAllBytes(currentFilePath, saveData);
+            UpdateTitleSaveIndication(false);
         }
 
         private void QuickSave_Click(object sender, RoutedEventArgs e)
@@ -482,6 +495,7 @@ namespace ArchiveExplorer
                 var currentItem = FileView.SelectedItem as FileListItem;
                 if (currentItem == null) return;
                 TryImportFile(file, false, false, currentItem.Text, true);
+                UpdateTitleSaveIndication(true);
             }
         }
 
@@ -497,6 +511,7 @@ namespace ArchiveExplorer
                         if (file.Contains(currentFile.TemporaryPath)) continue;
                     }
                     TryImportFile(file);
+                    UpdateTitleSaveIndication(true);
                 }
             }
         }
@@ -526,6 +541,7 @@ namespace ArchiveExplorer
             }
             UpdateTreeView();
             UpdateListView(currentNode);
+            UpdateTitleSaveIndication(true);
         }
 
         private void TreeViewItem_Drop(object sender, DragEventArgs e) 
@@ -554,6 +570,7 @@ namespace ArchiveExplorer
             }
             UpdateTreeView();
             UpdateListView(currentNode);
+            UpdateTitleSaveIndication(true);
         }
 
 
@@ -699,6 +716,8 @@ namespace ArchiveExplorer
             textBox.Cursor = Cursors.IBeam;
             textBox.BorderThickness = new Thickness(1);
             textBox.SelectAll();
+
+            UpdateTitleSaveIndication(true);
         }
 
         private childItem FindVisualChild<childItem>(DependencyObject obj)
@@ -728,6 +747,7 @@ namespace ArchiveExplorer
             currentFile.ExportNode(node);
             UpdateListView(currentNode);
             UpdateTreeView();
+            UpdateTitleSaveIndication(true);
         }
 
         private void CopyItem_Click(object sender, RoutedEventArgs e)
@@ -766,6 +786,7 @@ namespace ArchiveExplorer
                     currentFile.RemoveNode(item.Node);
                 UpdateListView(currentNode);
                 UpdateTreeView();
+                UpdateTitleSaveIndication(true);
             }
         }
 
@@ -777,6 +798,7 @@ namespace ArchiveExplorer
             {
                 currentFile.RemoveNode(item.Node);
                 UpdateListView(currentNode);
+                UpdateTitleSaveIndication(true);
             }
             UpdateTreeView();
         }
@@ -840,6 +862,7 @@ namespace ArchiveExplorer
             currentFile.RecalculateStructureIndexes();
             UpdateListView(currentNode);
             UpdateTreeView();
+            UpdateTitleSaveIndication(true);
         }
 
         private void TryImportFile(string filepath, bool forceDuplicate = false, bool importARC = true, string originalPath = null, bool forceOverride = false)
@@ -935,6 +958,7 @@ namespace ArchiveExplorer
             currentFile.UpdateAllNodeData();
             UpdateListView(currentNode);
             UpdateTreeView();
+            UpdateTitleSaveIndication(true);
         }
         
         private void TryOpenFile(string filepath)
@@ -970,6 +994,7 @@ namespace ArchiveExplorer
             UpdateListView(currentFile.structure);
             currentNode = currentFile.structure;
             UpdatePath();
+            UpdateTitleSaveIndication(false);
         }
 
 
@@ -1128,7 +1153,7 @@ namespace ArchiveExplorer
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            if (currentFile != null)
+            if (currentFile != null && this._saved == false)
             {
                 MessageBoxResult result = MessageBox.Show("Do you want to save before quitting?", "Warning", MessageBoxButton.YesNoCancel);
                 if (result == MessageBoxResult.Yes)

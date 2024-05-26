@@ -28,12 +28,13 @@ namespace ArchiveExplorer
     {
         private bool _saved = true;
         public static readonly string AppTag = "AE";
-        public static readonly string Version = "v0.26";
+        public static readonly string Version = "v0.27";
+        public static readonly string TitleText = $"RANWr ArchiveExplorer {Version}";
 
         public MainWindow()
         {
             InitializeComponent();
-            this.Title = $"RANWr ArchiveExplorer {Version}";
+            this.Title = TitleText;
             this.AllowDrop= true;
             this.Drop += MainWindow_Drop;
 
@@ -109,9 +110,9 @@ namespace ArchiveExplorer
 
             this._saved = !enabled;
             if (!this._saved)
-                this.Title = this.Title + "*";
+                this.Title = "(*) " + TitleText;
             else
-                this.Title = this.Title.Substring(0, this.Title.Length - 1);
+                this.Title = TitleText;
         }
 
         public struct github_releases
@@ -405,6 +406,7 @@ namespace ArchiveExplorer
             currentFile.UpdateAllNodeData();
             byte[] saveData = currentFile.EncodeARC();
             if(Path.GetExtension(currentFilePath) == ".szs") saveData = YAZ0.Compress(saveData, level);
+            if (Path.GetExtension(currentFilePath) == ".lzma") saveData = LZMA.Encode(saveData);
             File.WriteAllBytes(currentFilePath, saveData);
             UpdateTitleSaveIndication(false);
         }
@@ -511,7 +513,7 @@ namespace ArchiveExplorer
                         if (file.Contains(currentFile.TemporaryPath)) continue;
                     }
                     TryImportFile(file);
-                    UpdateTitleSaveIndication(true);
+                    //UpdateTitleSaveIndication(true);
                 }
             }
         }
@@ -534,7 +536,9 @@ namespace ArchiveExplorer
                     FileAttributes attr = File.GetAttributes(file);
                     string relative = Path.GetRelativePath(currentFile.TemporaryPath, file);
                     currentFile.RemoveNode(currentFile.GetNodeByPath(relative));
-                    if (attr.HasFlag(FileAttributes.Directory)) Directory.Delete(file);
+                    if (attr.HasFlag(FileAttributes.Directory)) 
+                        if(Path.Exists(file))
+                            Directory.Delete(file);
                     else File.Delete(file);
                 }
 
@@ -882,7 +886,7 @@ namespace ArchiveExplorer
                 if (data.Length > 4)
                 {
                     var signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
-                    if (signature == ARC.Signature || signature == YAZ0.SignatureHex)
+                    if (signature == ARC.Signature || signature == YAZ0.SignatureHex || LZMA.isLZMA(data))
                     {
                         if (importARC) TryOpenFile(filepath);
                         return;
@@ -972,7 +976,7 @@ namespace ArchiveExplorer
                     else
                     {
                         var dialog = new SaveFileDialog();
-                        dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo ARC Archive|*.arc;*.u8";
+                        dialog.Filter = "All supported files|*.szs;*.arc;*.u8;*.lzma|Compressed Archive|*.szs;*.lzma|Nintendo ARC Archive|*.arc;*.u8";
                         bool? newResult = dialog.ShowDialog();
                         if (newResult == true)
                         {
@@ -1162,7 +1166,7 @@ namespace ArchiveExplorer
                     else
                     {
                         var dialog = new SaveFileDialog();
-                        dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo ARC Archive|*.arc;*.u8";
+                        dialog.Filter = "All supported files|*.szs;*.arc;*.u8;*.lzma|Compressed Archive|*.szs;*.lzma|Nintendo ARC Archive|*.arc;*.u8";
                         bool? newResult = dialog.ShowDialog();
                         if (newResult == true)
                         {
@@ -1195,6 +1199,11 @@ namespace ArchiveExplorer
             if (signature == YAZ0.SignatureHex)
             {
                 data = YAZ0.Decode(data);
+                signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
+            }
+            else if (LZMA.isLZMA(data))
+            {
+                data = LZMA.Decode(data);
                 signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
             }
             if (signature != ARC.Signature) return null;

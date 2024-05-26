@@ -51,7 +51,6 @@ namespace ArchiveExplorer
             AllocConsole();
             Console.WriteLine($"RANWr ArchiveExplorer {AppTag}.{Version} Debug Build - {Properties.Resources.BuildDate}");
 #endif
-
         }
 
         [DllImport("Kernel32")]
@@ -154,7 +153,7 @@ namespace ArchiveExplorer
         public Dictionary<string, string> fileTypes = new Dictionary<string, string>()
         {
             //Effects
-            { ".breft", "Binary Revolution Effect Project Textures" },
+            { ".breft", "Binary Revolution Effect Texture Project" },
             { ".breff", "Binary Revolution Effect Project" },
 
             //Menu Files
@@ -166,14 +165,6 @@ namespace ArchiveExplorer
 
             { ".thp", "THP Movie File" },
             { ".tpl", "Texture Palette Library" },
-
-            //Sound
-            { ".brsar", "Binary Revolution Sound Archive" },
-            { ".brwar", "Binary Revolution Wave Archive" },
-            { ".brstm", "Binary Revolution Stream Sound" },
-            { ".brseq", "Binary Revolution Sequence" },
-            { ".brwsd", "Binary Revolution Wave Sound Data" },
-            { ".brasd", "Binary Revolution Animation Sound Data" },
 
             //Resources
             { ".brres", "Binary Revolution Resource" },
@@ -189,8 +180,9 @@ namespace ArchiveExplorer
             { ".brtsa", "Binary Revolution Texture SRT Animation Resource" },
             { ".brvia", "Binary Revolution Visibility Animation Resource" },
 
+            { ".kcl", "KCL Collision File" },
+
             //Mario Kart Wii Files
-            { ".kcl", "Mario Kart Wii Collision File" },
             { ".kmp", "Mario Kart Wii Map Parameters" },
             { ".krm", "Mario Kart Wii Rumble" },
             { ".bsp", "Binary Settings and Physics" },
@@ -202,6 +194,15 @@ namespace ArchiveExplorer
             { ".ikp", "Inverse Kinematics Parameters" },
             { ".bcp", "Binary Camera Parameters" },
             { ".bmm", "Binary Mii Material" },
+
+            
+            //Sound
+            { ".brsar", "Binary Revolution Sound Archive" },
+            { ".brwar", "Binary Revolution Wave Archive" },
+            { ".brstm", "Binary Revolution Stream Sound" },
+            { ".brseq", "Binary Revolution Sequence" },
+            { ".brwsd", "Binary Revolution Wave Sound Data" },
+            { ".brasd", "Binary Revolution Animation Sound Data" },
 
             //Mario Kart Wii PostEffects
             { ".bdof", "Binary Depth of Field" },
@@ -491,7 +492,10 @@ namespace ArchiveExplorer
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 foreach (var file in files)
                 {
-                    if (file.Contains(currentFile.TemporaryPath)) continue;
+                    if (currentFile != null)
+                    {
+                        if (file.Contains(currentFile.TemporaryPath)) continue;
+                    }
                     TryImportFile(file);
                 }
             }

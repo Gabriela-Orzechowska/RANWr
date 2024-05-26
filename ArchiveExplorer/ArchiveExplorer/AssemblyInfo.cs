@@ -10,7 +10,7 @@ using System.Windows;
                                               //(used if a resource is not found in the page,
                                               // app, or any theme specific resource dictionaries)
 )]
-[assembly: AssemblyCompany("Mivaana")]
+[assembly: AssemblyCompany("VolcanoPiece1")]
 [assembly: AssemblyConfiguration("Public")]
 [assembly: AssemblyDescription("RANWr Nintendo Archive Editor")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
@@ -20,7 +20,7 @@ using System.Windows;
 [assembly: AssemblyVersion("1.0.0")]
 [assembly: AssemblyCulture("")]
 [assembly: AssemblyMetadata("RepositoryUrl", "https://github.com/Gabriela-Orzechowska/RANWr/")]
-[assembly: AssemblyTrademark("Mivaana")]
+[assembly: AssemblyTrademark("VolcanoPiece1")]
 [assembly: System.Resources.NeutralResourcesLanguage("en-GB")]
 [assembly: Guid("dc90e8cf-5c57-40bc-8832-064ac1f2c575")]
 [assembly: AssemblyCopyright("Copyright © 2023 RANWr")]

@@ -1,0 +1,7 @@
+﻿namespace gablibela
+{
+    namespace snd
+    {
+
+    }
+}

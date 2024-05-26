@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundMaker", "SoundMaker\SoundMaker.csproj", "{0911A07E-F95D-4E02-AB1D-975AC0F7B972}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoundMaker", "SoundMaker\SoundMaker.csproj", "{0911A07E-F95D-4E02-AB1D-975AC0F7B972}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ranwr-snd", "ranwr-snd\ranwr-snd.csproj", "{4684654E-5031-430C-9B2E-45B8CA54A947}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gablibela", "gablibela\gablibela.csproj", "{04BAFEDE-BA60-4F89-BCE6-802EAA73A971}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{0911A07E-F95D-4E02-AB1D-975AC0F7B972}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0911A07E-F95D-4E02-AB1D-975AC0F7B972}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0911A07E-F95D-4E02-AB1D-975AC0F7B972}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4684654E-5031-430C-9B2E-45B8CA54A947}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4684654E-5031-430C-9B2E-45B8CA54A947}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4684654E-5031-430C-9B2E-45B8CA54A947}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4684654E-5031-430C-9B2E-45B8CA54A947}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04BAFEDE-BA60-4F89-BCE6-802EAA73A971}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04BAFEDE-BA60-4F89-BCE6-802EAA73A971}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04BAFEDE-BA60-4F89-BCE6-802EAA73A971}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04BAFEDE-BA60-4F89-BCE6-802EAA73A971}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

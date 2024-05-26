@@ -27,8 +27,27 @@ namespace ranwr
                     switch (args[0])
                     {
                         case "c":
+                        case "create":
+                            byte type2 = 0;
+                            for (int i = 1; i < args.Length; i++)
+                            {
+                                if (args[i].StartsWith("--lzma"))
+                                {
+                                    type2 = 1;
+                                    args[i] = string.Empty;
+                                }
+                            }
+                            create(args[1], args[2], type2);
+                            break;
+
                         case "compress":
-                            compress(args[1], args[2]);
+                            byte type = 0;
+                            for(int i = 1; i < args.Length; i++)
+                            {
+                                type = 1;
+                                args[i] = string.Empty;
+                            }
+                            compress(args[1], args[2], type);
                             break;
                         case "d":
                         case "decompress":
@@ -42,7 +61,16 @@ namespace ranwr
                     {
                         case "cmpr":
                         case "compress":
-                            compress(args[1]);
+                            byte type = 0;
+                            for (int i = 1; i < args.Length; i++)
+                            {
+                                if (args[i].StartsWith("--lzma"))
+                                {
+                                    type = 1;
+                                    args[i] = string.Empty;
+                                }
+                            }
+                            compress(args[1], null, type);
                             break;
                         case "d":
                         case "decompress":
@@ -57,7 +85,13 @@ namespace ranwr
                             break;
                         case "c":
                         case "create":
-                            create(args[1]);
+                            byte type2 = 0;
+                            for (int i = 1; i < args.Length; i++)
+                            {
+                                type2 = 1;
+                                args[i] = string.Empty;
+                            }
+                            create(args[1], null, type2);
                             break;
                     }
                     
@@ -72,6 +106,7 @@ namespace ranwr
 
             var signature = BitConverter.ToUInt32(workFile.Take(4).Reverse().ToArray());
             if (signature == YAZ0.SignatureHex) workFile = YAZ0.Decode(original);
+            else if (LZMA.isLZMA(original)) workFile = LZMA.Decode(original);
             signature = BitConverter.ToUInt32(workFile.Take(4).Reverse().ToArray());
             if(signature == ARC.Signature)
             {
@@ -124,8 +159,9 @@ namespace ranwr
 
         }
 
-        public static void create(string file, string output = null)
+        public static void create(string file, string output = null, byte type = 0)
         {
+            Console.WriteLine($"Creating: {file} type: {type}");
             if (!Path.Exists(file))
             {
                 fileNotFound(file);
@@ -136,17 +172,24 @@ namespace ranwr
                 return;
             }
 
-            if (output == null) output = Path.GetFileNameWithoutExtension(file) + ".szs";
+            if (output == null || output == string.Empty)
+            {
+                if(type == 1) output = Path.GetFileNameWithoutExtension(file) + ".lzma";
+                else output = Path.GetFileNameWithoutExtension(file) + ".szs";
+            }
             ARC darch = new();
             darch.SetFolder(file);
-            darch.UpdateAllNodeData(); ;
-            byte[] data = YAZ0.Compress(darch.Encode());
+            darch.UpdateAllNodeData();
+            byte[] data = new byte[1];
+            if(Path.GetExtension(output.ToLower()) == ".szs") data = YAZ0.Compress(darch.EncodeARC());
+            else if (Path.GetExtension(output.ToLower()) == ".lzma") data = LZMA.Encode(darch.EncodeARC());
+
             File.WriteAllBytes(output, data);
         }
  
-        public static void compress(string file, string output = null)
+        public static void compress(string file, string output = null, byte type = 0)
         {
-            if (output == null) output = Path.GetFileNameWithoutExtension(file) + ".szs";
+            if (output == null || output == string.Empty) output = Path.GetFileNameWithoutExtension(file) + ".szs";
 
             Console.WriteLine(Title);
             Console.WriteLine($"Compressing: {Path.GetFileName(file)} to {output}");
@@ -157,8 +200,14 @@ namespace ranwr
             {
                 original = YAZ0.Decode(original);
             }
-            byte[] compressed = YAZ0.Compress(original);
-            
+            else if (LZMA.isLZMA(original))
+            {
+                original = LZMA.Decode(original);
+            }
+            byte[] compressed = new byte[1];
+            if (type == 0) compressed = YAZ0.Compress(original);
+            else if (type == 1) compressed = LZMA.Encode(original);
+
             File.WriteAllBytes(output, compressed);
         }
 
@@ -171,8 +220,12 @@ namespace ranwr
 
             byte[] original = File.ReadAllBytes(file);
             var signature = BitConverter.ToUInt32(original.Take(4).Reverse().ToArray());
-            if (signature != YAZ0.SignatureHex) return;
-            byte[] decompressed = YAZ0.Decode(original);
+            byte[] decompressed = new byte[1];
+            if (signature == YAZ0.SignatureHex)
+                decompressed = YAZ0.Decode(original);
+            else if (LZMA.isLZMA(original))
+                decompressed = LZMA.Decode(original);
+            else return;
             File.WriteAllBytes(output, decompressed);
         }
 
@@ -189,6 +242,11 @@ namespace ranwr
             if (signature == YAZ0.SignatureHex)
             {
                 data = YAZ0.Decode(data);
+                signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
+            }
+            else if (LZMA.isLZMA(data))
+            {
+                data = LZMA.Decode(data);
                 signature = BitConverter.ToUInt32(data.Take(4).Reverse().ToArray());
             }
             if (signature != ARC.Signature) return null;

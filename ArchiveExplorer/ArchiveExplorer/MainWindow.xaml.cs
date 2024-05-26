@@ -405,8 +405,8 @@ namespace ArchiveExplorer
             if (currentFile == null) return;
             currentFile.UpdateAllNodeData();
             byte[] saveData = currentFile.EncodeARC();
-            if(Path.GetExtension(currentFilePath) == ".szs") saveData = YAZ0.Compress(saveData, level);
-            if (Path.GetExtension(currentFilePath) == ".lzma") saveData = LZMA.Encode(saveData);
+            if(Path.GetExtension(currentFilePath.ToLower()) == ".szs") saveData = YAZ0.Compress(saveData, level);
+            if(Path.GetExtension(currentFilePath.ToLower()) == ".lzma") saveData = LZMA.Encode(saveData);
             File.WriteAllBytes(currentFilePath, saveData);
             UpdateTitleSaveIndication(false);
         }
@@ -967,7 +967,7 @@ namespace ArchiveExplorer
         
         private void TryOpenFile(string filepath)
         {
-            if(currentFile != null)
+            if(currentFile != null && !this._saved)
             {
                 MessageBoxResult result = MessageBox.Show("Do you want to save before quitting?", "Warning", MessageBoxButton.YesNoCancel);
                 if (result == MessageBoxResult.Yes)

@@ -1,4 +1,4 @@
-![image](https://media.discordapp.net/attachments/946072225419776030/1104078589839814716/image.png?width=1920&height=435)
+![image](https://gabriela-orzechowska.com/images/ranwrLogo.png)
 
 
  RANWr (RANWr Ain't NintendoWare) is set of editors for various Wii file formats.
@@ -21,6 +21,7 @@
 | Format | Decode | Encode |
 |--------|----------|----------|
 | YAZ0   | Yes      | Yes      |
+| LZMA   | Yes      | Yes
 
 
 ## Credits

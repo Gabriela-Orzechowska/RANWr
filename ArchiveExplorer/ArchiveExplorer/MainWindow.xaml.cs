@@ -28,7 +28,7 @@ namespace ArchiveExplorer
     {
         private bool _saved = true;
         public static readonly string AppTag = "AE";
-        public static readonly string Version = "v0.27";
+        public static readonly string Version = "v0.28";
         public static readonly string TitleText = $"RANWr ArchiveExplorer {Version}";
 
         public MainWindow()
@@ -404,6 +404,7 @@ namespace ArchiveExplorer
         {
             if (currentFile == null) return;
             currentFile.UpdateAllNodeData();
+            currentFile.SetSaved(true);
             byte[] saveData = currentFile.EncodeARC();
             if(Path.GetExtension(currentFilePath.ToLower()) == ".szs") saveData = YAZ0.Compress(saveData, level);
             if(Path.GetExtension(currentFilePath.ToLower()) == ".lzma") saveData = LZMA.Encode(saveData);
@@ -1157,8 +1158,14 @@ namespace ArchiveExplorer
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            if (currentFile != null && this._saved == false)
+            if(currentFile == null)
             {
+                base.OnClosing(e); return;
+            }
+            currentFile.UpdateAllNodeData();
+            if (this._saved == false || this.currentFile.IsAnythingChanged())
+            {
+                UpdateTitleSaveIndication(true);
                 MessageBoxResult result = MessageBox.Show("Do you want to save before quitting?", "Warning", MessageBoxButton.YesNoCancel);
                 if (result == MessageBoxResult.Yes)
                 {
@@ -1210,7 +1217,7 @@ namespace ArchiveExplorer
             return new(data, filename);
         }
 
-        private void AboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://www.youtube.com/watch?v=__nioTv19bQ");
+        private void AboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://www.youtube.com/watch?v=ENCYid7B1kQ");
         private void GithubAboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://github.com/Gabriela-Orzechowska/RANWr");
 
         private void OpenLinkInBrowser(string uri)

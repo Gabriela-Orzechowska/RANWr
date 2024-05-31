@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Text;
 using gablibela.io;
+using System.Security.Cryptography;
 
 namespace gablibela
 {
@@ -52,6 +53,9 @@ namespace gablibela
                 public Node? Parent;
 
                 public byte[] Data;
+                public byte[] md5Hash;
+
+                public bool isChanged;
 
                 public Node(NodeData data)
                 {
@@ -67,6 +71,8 @@ namespace gablibela
                         this.EndNode = data.SizeOrEndNode;
                     }
                     Children = new List<Node>();
+                    CalcHash();
+                    isChanged = false;
                 }
                 public Node(string name, byte[] data, NodeType type)
                 {
@@ -75,6 +81,25 @@ namespace gablibela
                     Type = type;
                     DataSize = data.Length;
                     Children = new();
+                    CalcHash();
+                    isChanged = false;
+                }
+                public void CalcHash()
+                {
+                    if(this.Data == null || this.Data.Length == 0) return;
+                    using (var md5 = MD5.Create())
+                    {
+                        if (this.Type == NodeType.File)
+                        {
+                            byte[] newHash = md5.ComputeHash(this.Data);
+                            if(md5Hash != null && !md5Hash.SequenceEqual(newHash)) isChanged = true;
+                            md5Hash = newHash;
+                        }
+                            
+                        else
+                            md5Hash = new byte[16];
+                    }
+                    Console.WriteLine($"Node name {this.Name} hash = {BitConverter.ToString(md5Hash).Replace("-", "")}");
                 }
             }
 
@@ -119,8 +144,12 @@ namespace gablibela
                     node.Index = i + 1;
                     _nodeData.Add(nodeRawData);
                     _nodes.Add(node);
-                    if(node.Type == Node.NodeType.File)
+                    if (node.Type == Node.NodeType.File)
+                    {
                         node.Data = reader.ReadBytes((int)nodeRawData.SizeOrEndNode, nodeRawData.DataStartOrParent);
+                        node.CalcHash();
+                    }
+
                 }
                 rawNodeData = _nodeData.ToArray();
                 rawNodes = _nodes;
@@ -258,6 +287,16 @@ namespace gablibela
                 return returnNode;
             }
 
+            public bool IsAnythingChanged()
+            {
+                foreach(var node in rawNodes)
+                {
+                    if(node.isChanged) return true;
+                }
+
+                return false;
+            }
+
             public void UpdateAllNodeData()
             {
                 List<string> allfiles = Directory.GetFileSystemEntries(TemporaryPath, "*", SearchOption.AllDirectories).ToList();
@@ -309,7 +348,16 @@ namespace gablibela
                 if (node.Type == Node.NodeType.File)
                 {
                     node.Data = File.ReadAllBytes(exportPath);
+                    node.CalcHash();
                     node.DataSize = node.Data.Length;
+                }
+            }
+
+            public void SetSaved(bool state)
+            {
+                foreach(var i in rawNodes)
+                {
+                    i.isChanged = !state;
                 }
             }
 

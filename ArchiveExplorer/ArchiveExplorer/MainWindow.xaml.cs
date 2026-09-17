@@ -392,7 +392,7 @@ namespace ArchiveExplorer
         private void OpenFileDialog()
         {
             var dialog = new OpenFileDialog();
-            dialog.Filter = "Nintendo ARC Archive|*.arc;*.szs;*.u8";
+            dialog.Filter = "Nintendo ARC Archive|*.arc;*.szs;*.u8;*.lzma";
             bool? result = dialog.ShowDialog();
             if (result == true)
             {
@@ -425,7 +425,7 @@ namespace ArchiveExplorer
         private void QuickSaveAs_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new SaveFileDialog();
-            dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo ARC Archive|*.arc;*.u8";
+            dialog.Filter = "All supported files|*.szs;*.arc;*.u8;*.lzma|Compressed Archive|*.szs;*.lzma|Nintendo ARC Archive|*.arc;*.u8";
             bool? result = dialog.ShowDialog();
             if (result == true)
             {
@@ -449,7 +449,7 @@ namespace ArchiveExplorer
         private void FullSaveAs_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new SaveFileDialog();
-            dialog.Filter = "All supported files|*.szs;*.arc;*.u8|Compressed Archive|*.szs|Nintendo ARC Archive|*.arc;*.u8";
+            dialog.Filter = "All supported files|*.szs;*.arc;*.u8;*.lzma|Compressed Archive|*.szs;*lzma|Nintendo ARC Archive|*.arc;*.u8";
             bool? result = dialog.ShowDialog();
             if (result == true)
             {
@@ -473,7 +473,7 @@ namespace ArchiveExplorer
                 foreach (var file in dialog.FileNames)
                 {
                     var extension = Path.GetExtension(file);
-                    if (extension == "*.szs" || extension == "*.arc" || extension == "*.u8") continue;
+                    if (extension == "*.lzma" || extension == "*.szs" || extension == "*.arc" || extension == "*.u8") continue;
                     TryImportFile(file,false,false);
                 }
             }

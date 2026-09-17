@@ -39,7 +39,7 @@ namespace gablibela.cmpr
             fileLenght = BitConverter.ToInt64(fileLenghtBytes);
 
             decoder.SetDecoderProperties(properties);
-            decoder.Code(stream, output, stream.Length, fileLenght, null);
+            decoder.Code(stream, output, stream.Length - stream.Position, fileLenght, null);
 
             return output.ToArray();
         }
@@ -51,10 +51,17 @@ namespace gablibela.cmpr
             MemoryStream stream = new MemoryStream(source);
             MemoryStream output = new();
 
-            encoder.WriteCoderProperties(output);
-            for (int i = 0; i < 8; i++) output.WriteByte(0xFF);
+            ulong fileSize = (ulong)stream.Length;
 
-            encoder.Code(stream, output, -1, -1, null);
+            encoder.WriteCoderProperties(output);
+
+            for (int i = 0; i < 8; i++)
+            {
+                output.WriteByte((byte)(fileSize & 0xFF));
+                fileSize >>= 8;
+            }
+
+            encoder.Code(stream, output, source.Length, -1, null);
             return output.ToArray();
 
         }

@@ -126,6 +126,7 @@
                 </GroupBox.Header>
                 <ListView x:Name="FileView" MouseDoubleClick="FileView_MouseDoubleClick" MouseMove="FileViewItem_Move"
                           MouseRightButtonUp="FileView_MouseRightButtonUp" ContextMenuOpening="FileView_ContextMenuOpening"
+                          SelectionMode="Extended" PreviewMouseLeftButtonDown="FileView_PreviewMouseLeftButtonDown"
                          >
                     <ListView.ItemTemplate>
                         <DataTemplate>

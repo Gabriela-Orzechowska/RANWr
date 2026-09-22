@@ -28,7 +28,7 @@ namespace ArchiveExplorer
     {
         private bool _saved = true;
         public static readonly string AppTag = "AE";
-        public static readonly string Version = "v0.28";
+        public static readonly string Version = "v0.29";
         public static readonly string TitleText = $"RANWr ArchiveExplorer {Version}";
 
         public MainWindow()
@@ -226,9 +226,9 @@ namespace ArchiveExplorer
         
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            if(Keyboard.Modifiers == ModifierKeys.Control)
+            if((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
             {
-                if(Keyboard.Modifiers == ModifierKeys.Shift)
+                if((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
                 {
                     switch(e.Key)
                     {
@@ -494,7 +494,7 @@ namespace ArchiveExplorer
             {
                 var file = dialog.FileName;
                 var extension = Path.GetExtension(file);
-                if (extension == "*.szs" || extension == "*.arc" || extension == "*.u8") return;
+                if (extension == "*.szs" || extension == "*.arc" || extension == "*.u8" || extension == "*.lzma") return;
                 var currentItem = FileView.SelectedItem as FileListItem;
                 if (currentItem == null) return;
                 TryImportFile(file, false, false, currentItem.Text, true);
@@ -615,6 +615,18 @@ namespace ArchiveExplorer
             OpenCurrentSelected(item);
         }
 
+        private void FileView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var item = ItemsControl.ContainerFromElement(FileView, e.OriginalSource as DependencyObject) as ListViewItem;
+
+            if (item == null) return;
+
+            if(item.IsSelected && Keyboard.Modifiers == ModifierKeys.None)
+            {
+                e.Handled = true;
+                return;
+            }
+        }
 
         private void FileViewItem_Move(object sender, MouseEventArgs e)
         {
@@ -1217,7 +1229,7 @@ namespace ArchiveExplorer
             return new(data, filename);
         }
 
-        private void AboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://www.youtube.com/watch?v=ENCYid7B1kQ");
+        private void AboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://www.youtube.com/watch?v=vc_3SkhgJ44");
         private void GithubAboutItem_Click(object sender, RoutedEventArgs e) => OpenLinkInBrowser("https://github.com/Gabriela-Orzechowska/RANWr");
 
         private void OpenLinkInBrowser(string uri)

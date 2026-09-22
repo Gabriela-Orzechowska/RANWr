@@ -23,5 +23,5 @@ using System.Windows;
 [assembly: AssemblyTrademark("VolcanoPiece1")]
 [assembly: System.Resources.NeutralResourcesLanguage("en-GB")]
 [assembly: Guid("dc90e8cf-5c57-40bc-8832-064ac1f2c575")]
-[assembly: AssemblyCopyright("Copyright © 2023 RANWr")]
+[assembly: AssemblyCopyright("Copyright © 2026 RANWr")]
 [assembly: ComVisible(false)]
